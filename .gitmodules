@@ -1,0 +1,6 @@
+[submodule "lib/termbox"]
+	path = lib/termbox
+	url = https://github.com/nsf/termbox
+[submodule "lib/yajl"]
+	path = lib/yajl
+	url = https://github.com/lloyd/yajl
