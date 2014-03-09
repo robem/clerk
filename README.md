@@ -7,18 +7,28 @@
 
 ## Build
 
+* clone _termbox_ and _yajl_
+
+`git submodule update --init`
+
 * build _termbox_ and _yajl_
 
 `cd clerk/lib/termbox`
-`waf configure`
-`waf`
+
+`./waf configure`
+
+`./waf`
+
 `rm build/src/libtermbox.so*` => to use static lib
 
 `cd clerk/lib/yajl`
+
 `./configure`
+
 `make`
 
 `cd clerk`
+
 `scons`
 
 ## Usage
