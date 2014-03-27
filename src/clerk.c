@@ -21,9 +21,11 @@ static char* clrk_input(void)
         LOG("END");
         return buffer;
       } else if (event.key == TB_KEY_BACKSPACE || event.key == TB_KEY_BACKSPACE2) {
-        tb_change_cell(2 + (--i), tb_height() - 1, ' ', 15, CLRK_COLOR_INPUT_BG);
-        buffer[i] = '\0';
-        tb_set_cursor((cx--)-2, cy);
+        if (i > 0) {
+          tb_change_cell(2 + (--i), tb_height() - 1, ' ', 15, CLRK_COLOR_INPUT_BG);
+          buffer[i] = '\0';
+          tb_set_cursor((cx--)-2, cy);
+        }
       } else if (event.ch > 31 && event.ch < 127) {
         LOG("input key %c", event.ch);
         if (i < CLRK_INPUT_BUFFER_SIZE) {
