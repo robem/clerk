@@ -148,10 +148,12 @@ void clrk_project_remove_current(void)
   clrk_list_remove(destroy_me);
 
   /* Remove all todos of that project */
+  clrk_list_t *helper;
   clrk_list_t *todo = project->todo_list;
   while (todo) {
+    helper = todo;
     clrk_list_free(todo);
-    todo = todo->next;
+    todo = helper->next;
   }
   project->number_of_todos = 0;
 
