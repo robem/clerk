@@ -14,7 +14,9 @@ static char* clrk_input(void)
   i = 0;
   while (tb_poll_event(&event)) {
     if (event.type == TB_EVENT_KEY) {
-      if (event.key == TB_KEY_ENTER) {
+      if (event.key == TB_KEY_ESC) {
+        break;
+      } else if (event.key == TB_KEY_ENTER) {
         if (i < CLRK_INPUT_BUFFER_SIZE) {
           buffer[i] = '\0';
         }
@@ -88,6 +90,9 @@ clrk_project_t* clrk_project_add(const char *name)
   if (name == NULL) {
     input = clrk_input();
     clrk_draw_remove_input_line();
+    if (input == NULL) {
+       return NULL;
+    }
   } else {
     input = (char*)name;
   }
@@ -224,6 +229,9 @@ clrk_todo_t* clrk_todo_add(const char *text)
     tb_present();
     input = clrk_input();
     clrk_draw_remove_input_line();
+    if (input == NULL) {
+      return NULL;
+    }
   } else {
     input = (char*)text;
   }
@@ -422,13 +430,6 @@ void clrk_loop_normal(void)
           LOG(RED"key 'k'"NOCOLOR);
           /* Go down */
           clrk_todo_prev();
-          break;
-        case 'i':
-          clrk_draw_show_input_line();
-          tb_present();
-          input = clrk_input();
-          free(input);
-          clrk_draw_remove_input_line();
           break;
         case 'S':
           clrk_save();
