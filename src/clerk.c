@@ -2,16 +2,24 @@
 
 clrk_clerk_t clerk;
 
-static char* clrk_input(void)
+static char* clrk_input(char *text)
 {
   HERE();
   unsigned i, cx, cy;
   char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
   struct tb_event event;
 
-  cx = 3;
   cy = tb_height() - 1;
+  cx = 3;
   i = 0;
+  if (text) {
+    strncpy(buffer, text, CLRK_INPUT_BUFFER_SIZE);
+    i = strlen(text);
+    cx += strlen(text);
+    clrk_draw_text(2, cy, text, 15, CLRK_COLOR_INPUT_BG);
+    tb_set_cursor(2 + strlen(text), cy);
+    tb_present();
+  }
   while (tb_poll_event(&event)) {
     if (event.type == TB_EVENT_KEY) {
       if (event.key == TB_KEY_ESC) {
@@ -88,11 +96,8 @@ clrk_project_t* clrk_project_add(const char *name)
   tb_present();
 
   if (name == NULL) {
-    input = clrk_input();
+    input = clrk_input(NULL);
     clrk_draw_remove_input_line();
-    if (input == NULL) {
-       return NULL;
-    }
   } else {
     input = (char*)name;
   }
@@ -227,7 +232,7 @@ clrk_todo_t* clrk_todo_add(const char *text)
   if (text == NULL) {
     clrk_draw_show_input_line();
     tb_present();
-    input = clrk_input();
+    input = clrk_input(NULL);
     clrk_draw_remove_input_line();
     if (input == NULL) {
       return NULL;
@@ -238,6 +243,10 @@ clrk_todo_t* clrk_todo_add(const char *text)
 
   todo = clrk_todo_new(input);
   assert(todo);
+
+  if (text == NULL) {
+     free(input);
+  }
 
   elem = clrk_list_add(&project->todo_list, todo);
   assert(elem);
@@ -253,6 +262,32 @@ clrk_todo_t* clrk_todo_add(const char *text)
 
   LOG("END");
   return todo;
+}
+
+static void clrk_todo_edit_current(void)
+{
+  HERE();
+  clrk_project_t *project;
+  clrk_todo_t *todo;
+  char *input;
+
+  if (clerk.current) {
+    project = clrk_list_data(clerk.current);
+
+    if (project->current) {
+      todo = clrk_list_data(project->current);
+
+      clrk_draw_show_input_line();
+      tb_present();
+      input = clrk_input(todo->message);
+      if (input == NULL) {
+         return;
+      }
+      clrk_draw_remove_input_line();
+      strncpy(todo->message, input, CLRK_TODO_MESSAGE_SIZE);
+      clrk_draw_todos();
+    }
+  }
 }
 
 static void clrk_todo_remove_current(void)
@@ -401,6 +436,11 @@ void clrk_loop_normal(void)
           /* Add new todo */
           LOG(RED"key 't'"NOCOLOR);
           clrk_todo_add(NULL);
+          break;
+        case 'e':
+          /* Edit todo */
+          LOG(RED"key 'e'"NOCOLOR);
+          clrk_todo_edit_current();
           break;
         case 'r':
           /* Mark current todo as 'running'/'next' */
