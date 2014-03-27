@@ -119,8 +119,6 @@ static int yajl_map_key(void *ctx, const unsigned char* key, size_t len)
 
   LOG("map key %s\n", buf);
 
-  clrk_draw_status(buf);
-
   if (!cfg->in_todo) {
     /* printf("%s\n", cfg->project_name); */
     clrk_project_add(buf);

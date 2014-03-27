@@ -400,6 +400,8 @@ void clrk_init(void)
 
   clrk_draw_project_line();
 
+  tb_set_cursor(TB_HIDE_CURSOR, TB_HIDE_CURSOR);
+
   LOG("END");
   tb_present();
 }
