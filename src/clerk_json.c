@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <assert.h>
 
-#include <yajl_gen.h>    // gennerate json
-#include <yajl_parse.h>  // parse json
+#include <yajl/yajl_gen.h>    // gennerate json
+#include <yajl/yajl_parse.h>  // parse json
 
 #include <clerk.h>
 #include <clerk_draw.h>

@@ -1,7 +1,13 @@
+YAJL_BUILD_PATH    = "./lib/yajl/build/yajl-2.0.5/"
+TERMBOX_BUILD_PATH = "./lib/termbox/build/"
+
 env = Environment( 
                   CC = "clang",
-                  CPPPATH = ["./lib/termbox/src/", "./include/", "./lib/yajl/src/api"],
-                  LIBPATH = ["./lib/termbox/build/src", "./lib/yajl/build/yajl-2.0.5/lib/"],
+                  CPPPATH = ["./include/",
+                             "./lib/termbox/src/",
+                             YAJL_BUILD_PATH + "/include/"],
+                  LIBPATH = [TERMBOX_BUILD_PATH + "/src/",
+                             YAJL_BUILD_PATH + "/lib/"],
                  )
 
 env.Program('clerk', 
