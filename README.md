@@ -7,13 +7,15 @@
 
 ## Build
 
-* clone _termbox_ and _yajl_
+`$CLERK = 'wherever your git clone finished'`
+
+### Clone _termbox_ and _yajl_
 
 `git submodule update --init`
 
-* build _termbox_ and _yajl_
+### Build _termbox_
 
-`cd clerk/lib/termbox`
+`cd $CLERK/lib/termbox`
 
 `./waf configure`
 
@@ -21,13 +23,15 @@
 
 `rm build/src/libtermbox.so*` => to use static lib
 
-`cd clerk/lib/yajl`
+### Build _yajl_
+
+`cd $CLERK/lib/yajl`
 
 `./configure`
 
 `make`
 
-`cd clerk`
+`cd $CLERK`
 
 `scons`
 
