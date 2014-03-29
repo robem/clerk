@@ -473,12 +473,16 @@ void clrk_loop_normal(void)
         case 'j':
           LOG(RED"key 'j'"NOCOLOR);
           /* Go down */
-          clrk_todo_next();
+          if (clerk.current) {
+            clrk_todo_next();
+          }
           break;
         case 'k':
           LOG(RED"key 'k'"NOCOLOR);
           /* Go down */
-          clrk_todo_prev();
+          if (clerk.current) {
+            clrk_todo_prev();
+          }
           break;
         case 'S':
           LOG(RED"key 'S'"NOCOLOR);
