@@ -253,6 +253,7 @@ void clrk_draw_help(void)
     "ESC: Cancel input",
     "",
     "?: Help",
+    "L: Load json config",
     "S: Save",
     "Q: Quit clerk",
     "",
