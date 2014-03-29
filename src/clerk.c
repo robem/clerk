@@ -12,6 +12,11 @@ static char* clrk_input(char *text)
   cy = tb_height() - 1;
   cx = 3;
   i = 0;
+
+  clrk_draw_show_input_line();
+  tb_present();
+
+  /* Draw given text and set cursor at the end */
   if (text) {
     strncpy(buffer, text, CLRK_INPUT_BUFFER_SIZE);
     i = strlen(text);
@@ -20,6 +25,8 @@ static char* clrk_input(char *text)
     tb_set_cursor(2 + strlen(text), cy);
     tb_present();
   }
+
+  /* Start input loop */
   while (tb_poll_event(&event)) {
     if (event.type == TB_EVENT_KEY) {
       if (event.key == TB_KEY_ESC) {
@@ -29,6 +36,7 @@ static char* clrk_input(char *text)
           buffer[i] = '\0';
         }
         LOG("END");
+        clrk_draw_remove_input_line();
         return buffer;
       } else if (event.key == TB_KEY_BACKSPACE || event.key == TB_KEY_BACKSPACE2) {
         if (i > 0) {
@@ -56,6 +64,7 @@ static char* clrk_input(char *text)
     tb_present();
   }
 
+  clrk_draw_remove_input_line();
   return NULL;
 }
 
@@ -68,7 +77,7 @@ static clrk_project_t* clrk_project_new(const char *name)
   assert(project);
 
   memset((void*)project->name, 0, CLRK_PRJ_NAME_SIZE);
-  if (name) {
+  if (name && *name != '\0') {
     strncpy(project->name, name, CLRK_PRJ_NAME_SIZE);
   } else {
     strncpy(project->name, "NONAME", CLRK_PRJ_NAME_SIZE);
@@ -92,12 +101,11 @@ clrk_project_t* clrk_project_add(const char *name)
   clrk_project_t *project;
   char *input;
 
-  clrk_draw_show_input_line();
-  tb_present();
-
   if (name == NULL) {
     input = clrk_input(NULL);
-    clrk_draw_remove_input_line();
+    if (input == NULL) {
+      return NULL;
+    }
   } else {
     input = (char*)name;
   }
@@ -230,10 +238,7 @@ clrk_todo_t* clrk_todo_add(const char *text)
   project = clrk_list_data(clerk.current);
 
   if (text == NULL) {
-    clrk_draw_show_input_line();
-    tb_present();
     input = clrk_input(NULL);
-    clrk_draw_remove_input_line();
     if (input == NULL) {
       return NULL;
     }
@@ -277,13 +282,10 @@ static void clrk_todo_edit_current(void)
     if (project->current) {
       todo = clrk_list_data(project->current);
 
-      clrk_draw_show_input_line();
-      tb_present();
       input = clrk_input(todo->message);
       if (input == NULL) {
          return;
       }
-      clrk_draw_remove_input_line();
       strncpy(todo->message, input, CLRK_TODO_MESSAGE_SIZE);
       clrk_draw_todos();
     }
@@ -479,6 +481,7 @@ void clrk_loop_normal(void)
           clrk_todo_prev();
           break;
         case 'S':
+          LOG(RED"key 'S'"NOCOLOR);
           clrk_save();
           clrk_draw_status("written to "CLRK_CONFIG_FILE);
           break;
