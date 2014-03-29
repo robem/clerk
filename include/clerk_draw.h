@@ -65,4 +65,9 @@ void clrk_draw_remove_input_line(void);
  */
 void clrk_draw_status(const char *status);
 
+/*
+ * Draw help text
+ */
+void clrk_draw_help();
+
 #endif

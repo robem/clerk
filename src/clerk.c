@@ -395,11 +395,13 @@ void clrk_init(void)
   clerk.current             = NULL;
   clerk.number_of_projects  = 0;
 
-  /* TODO: Load json data */
-  clrk_load();
-
   clrk_draw_project_line();
   clrk_draw_todos();
+
+  if (!clrk_load()) {
+    /* Show help screen */
+    clrk_draw_help();
+  }
 
   tb_set_cursor(TB_HIDE_CURSOR, TB_HIDE_CURSOR);
 
@@ -415,6 +417,8 @@ void clrk_loop_normal(void)
   clrk_project_t *p;
 
   while (tb_poll_event(&event)) {
+    clrk_draw_todos();
+    tb_present();
     if (event.type == TB_EVENT_KEY) {
       switch (event.ch) {
         case 'Q':
@@ -478,10 +482,18 @@ void clrk_loop_normal(void)
           clrk_save();
           clrk_draw_status("written to "CLRK_CONFIG_FILE);
           break;
-        /* case 'L': */
-        /*   clrk_load(); */
-        /*   clrk_draw_status(CLRK_CONFIG_FILE" loaded"); */
-        /*   break; */
+        case 'L':
+          LOG(RED"key 'L'"NOCOLOR);
+          if (clrk_load()) {
+            clrk_draw_status("loaded config "CLRK_CONFIG_FILE);
+          } else {
+            clrk_draw_status("cannot find config "CLRK_CONFIG_FILE);
+          }
+          break;
+        case '?':
+          LOG(RED"key '?'"NOCOLOR);
+          clrk_draw_help();
+          break;
         case '0':
           /* Go to the first project */
           LOG(RED"key '0'"NOCOLOR);
@@ -495,6 +507,9 @@ void clrk_loop_normal(void)
       }
 
       switch (event.key) {
+        case TB_KEY_ESC:
+          clrk_draw_todos();
+          break;
         case TB_KEY_SPACE:
           clrk_todo_tick_off();
           break;

@@ -152,7 +152,7 @@ static int yajl_end_array(void *ctx)
   return 1;
 }
 
-void clrk_load(void)
+bool clrk_load(void)
 {
   HERE();
   FILE *config;
@@ -178,7 +178,7 @@ void clrk_load(void)
   if (config == NULL) {
     clrk_draw_status("Cannot open config file "CLRK_CONFIG_FILE);
     LOG("END");
-    return;
+    return false;
   }
 
   LOG("before get file size");
@@ -221,10 +221,11 @@ void clrk_load(void)
   LOG("before free");
   yajl_free(parser_handle);
 
-  return;
+  return true;
   LOG("END");
 out:
   fclose(config);
   LOG("END");
+  return false;
 }
 

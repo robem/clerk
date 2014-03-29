@@ -222,3 +222,70 @@ void clrk_draw_status(const char* status)
   clrk_draw_text(0 + strlen(prompt) + 1, height - 1, status, CLRK_COLOR_INPUT_FG | TB_BOLD, CLRK_COLOR_INPUT_BG);
 }
 
+void clrk_draw_help(void)
+{
+  HERE();
+  unsigned height = tb_height();
+  unsigned width  = tb_width();
+  unsigned i = 0;
+
+  /* TODO: Keys should be obtained from an config file */
+  /* Define help text */
+  const char *help_text[] = {
+    "",
+    "Keys",
+    "====",
+    "",
+    "Movement keys",
+    "h: Move to previous project",
+    "l: Move to next project",
+    "j: Move to next todo",
+    "k: Move to previous todo",
+    "",
+    "Action keys",
+    "p: Create new project",
+    "P: Delete current project",
+    "t: Create new todo",
+    "T: Delete current todo",
+    "e: Edit current todo",
+    "",
+    "ESC: Cancel input",
+    "",
+    "?: Help",
+    "S: Save",
+    "Q: Quit clerk",
+    "",
+    "Press any key to continue...",
+    "END OF HELP"
+  };
+
+  /* Calculate number of lines */
+  unsigned lines = 0;
+  while (strcmp(help_text[i++], "END OF HELP")) {
+    lines++;
+  }
+  LOG("Number of helper text lines %d", lines);
+
+  /* Draw a box in the bottom of the screen */
+  unsigned start_line = (height - 1) - lines;
+  unsigned text_height = height - start_line;
+  struct tb_cell cells[width * text_height];
+
+  LOG("before defining background cells");
+  for (i = 0; i < (width * text_height); ++i) {
+    cells[i].ch = ' ';
+    cells[i].fg = CLRK_COLOR_INPUT_FG;
+    cells[i].bg = CLRK_COLOR_INPUT_BG;
+  }
+
+  LOG("before drawing box height: %d, start_line: %d, helpsize: %d", height, start_line, lines);
+  tb_blit(0, start_line, width, text_height, cells);
+
+  /* Draw help text */
+  LOG("before drawing text");
+  for (i = 0; i < lines; ++i) {
+    clrk_draw_text(1, start_line + i, help_text[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+  }
+  LOG("END");
+}
+

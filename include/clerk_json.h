@@ -22,6 +22,6 @@ void clrk_save(void);
 /*
  * Loads JSON config file
  */
-void clrk_load(void);
+bool clrk_load(void);
 
 #endif
