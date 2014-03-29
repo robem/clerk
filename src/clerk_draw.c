@@ -245,6 +245,7 @@ void clrk_draw_help(void)
     "Action keys",
     "p: Create new project",
     "P: Delete current project",
+    "E: Edit current project",
     "t: Create new todo",
     "T: Delete current todo",
     "e: Edit current todo",

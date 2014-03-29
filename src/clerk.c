@@ -150,6 +150,25 @@ clrk_list_t* clrk_project_set_current(clrk_list_t *project)
   return project;
 }
 
+static void clrk_project_edit_current(void)
+{
+  HERE();
+  clrk_project_t *project;
+  clrk_todo_t *todo;
+  char *input;
+
+  if (clerk.current) {
+    project = clrk_list_data(clerk.current);
+
+    input = clrk_input(project->name);
+    if (input == NULL || input == '\0') {
+      return;
+    }
+    strncpy(project->name, input, CLRK_PRJ_NAME_SIZE);
+    clrk_draw_project_line();
+  }
+}
+
 void clrk_project_remove_current(void)
 {
   HERE();
@@ -283,7 +302,7 @@ static void clrk_todo_edit_current(void)
       todo = clrk_list_data(project->current);
 
       input = clrk_input(todo->message);
-      if (input == NULL) {
+      if (input == NULL || input == '\0') {
          return;
       }
       strncpy(todo->message, input, CLRK_TODO_MESSAGE_SIZE);
@@ -445,6 +464,11 @@ void clrk_loop_normal(void)
           /* Add new todo */
           LOG(RED"key 't'"NOCOLOR);
           clrk_todo_add(NULL);
+          break;
+        case 'E':
+          /* Edit project */
+          LOG(RED"key 'E'"NOCOLOR);
+          clrk_project_edit_current();
           break;
         case 'e':
           /* Edit todo */
