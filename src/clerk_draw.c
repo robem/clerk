@@ -209,15 +209,16 @@ void clrk_draw_remove_input_line(void)
 void clrk_draw_status(const char* status)
 {
   unsigned height = tb_height();
-  const char *prompt = "clerk> ";
+  const char *prompt = " clerk ";
 
   /* Draw background command line */
   clrk_draw_line(height - 1, CLRK_COLOR_INPUT_BG);
 
   /* Draw prompt */
-  clrk_draw_text(0, height - 1, prompt, CLRK_COLOR_CHECKED_FALSE, CLRK_COLOR_INPUT_BG);
+  clrk_draw_text(0, height - 1, prompt, CLRK_COLOR_PROMPT_FG, CLRK_COLOR_PROMPT_BG);
 
   /* Draw status message */
-  clrk_draw_text(0 + strlen(prompt), height - 1, status, 15, CLRK_COLOR_INPUT_BG);
+  clrk_draw_text(0 + strlen(prompt), height - 1, " ", CLRK_COLOR_INPUT_FG | TB_BOLD, CLRK_COLOR_INPUT_BG);
+  clrk_draw_text(0 + strlen(prompt) + 1, height - 1, status, CLRK_COLOR_INPUT_FG | TB_BOLD, CLRK_COLOR_INPUT_BG);
 }
 
