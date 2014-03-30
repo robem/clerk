@@ -46,6 +46,7 @@ typedef struct clrk_project {
 } clrk_project_t;
 
 typedef struct clrk_clerk {
+  char *json;
   clrk_list_t *project_list;
   clrk_list_t *current;
   unsigned int number_of_projects;

@@ -172,7 +172,8 @@ bool clrk_load(void)
 
   LOG("before openfile");
   /* Load config file */
-  config = fopen(CLRK_CONFIG_FILE, "r");
+  clerk.json = clerk.json ? clerk.json : CLRK_CONFIG_FILE;
+  config = fopen(clerk.json, "r");
 
   LOG("before draw status");
   if (config == NULL) {

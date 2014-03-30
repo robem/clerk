@@ -510,11 +510,13 @@ void clrk_loop_normal(void)
           break;
         case 'S':
           LOG(RED"key 'S'"NOCOLOR);
+          /* Write projects/todos to json file */
           clrk_save();
           clrk_draw_status("written to "CLRK_CONFIG_FILE);
           break;
         case 'L':
           LOG(RED"key 'L'"NOCOLOR);
+          /* Load json file */
           if (clrk_load()) {
             clrk_draw_status("loaded config "CLRK_CONFIG_FILE);
           } else {
@@ -523,11 +525,12 @@ void clrk_loop_normal(void)
           break;
         case '?':
           LOG(RED"key '?'"NOCOLOR);
+          /* Show help box */
           clrk_draw_help();
           break;
         case '0':
-          /* Go to the first project */
           LOG(RED"key '0'"NOCOLOR);
+          /* Go to the first project */
           clrk_project_set_current(clerk.project_list);
           break;
           /* case '$': */
