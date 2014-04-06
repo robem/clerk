@@ -288,6 +288,12 @@ void clrk_draw_help(void)
   for (i = 0; i < lines; ++i) {
     clrk_draw_text(1, start_line + i, help_text[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
   }
+
   LOG("END");
+}
+
+void clrk_draw(void) {
+  clrk_draw_project_line();
+  clrk_draw_todos();
 }
 

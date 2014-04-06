@@ -1,3 +1,5 @@
+# vim: set filetype=python :
+
 YAJL_BUILD_PATH    = "./lib/yajl/build/yajl-2.0.5/"
 TERMBOX_BUILD_PATH = "./lib/termbox/build/"
 

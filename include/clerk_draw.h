@@ -68,6 +68,11 @@ void clrk_draw_status(const char *status);
 /*
  * Draw help text
  */
-void clrk_draw_help();
+void clrk_draw_help(void);
+
+/*
+ * Draw projects and todos
+ */
+void clrk_draw(void);
 
 #endif

@@ -35,9 +35,6 @@ typedef struct clrk_todo {
   bool running;
 } clrk_todo_t;
 
-/*
- * TODO: Add linked lists.
- */
 typedef struct clrk_project {
   char name[CLRK_PRJ_NAME_SIZE];
   clrk_list_t *todo_list;

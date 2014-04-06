@@ -142,8 +142,7 @@ clrk_list_t* clrk_project_set_current(clrk_list_t *project)
   HERE();
   if (project) {
     clerk.current = project;
-    clrk_draw_project_line();
-    clrk_draw_todos();
+    clrk_draw();
   }
   LOG("lproj "PTR, project);
   LOG("END");
@@ -176,7 +175,7 @@ void clrk_project_remove_current(void)
   clrk_list_t *destroy_me;
   clrk_project_t *project;
 
-  if (clerk.project_list == NULL) {
+  if (clerk.project_list == NULL || clerk.current == NULL) {
     return;
   }
 
@@ -219,8 +218,6 @@ void clrk_project_remove_current(void)
 
   clerk.number_of_projects--;
 
-  clrk_draw_project_line();
-  clrk_draw_todos();
   LOG("END");
 }
 
@@ -416,14 +413,21 @@ void clrk_init(void)
   clerk.current             = NULL;
   clerk.number_of_projects  = 0;
 
-  clrk_draw_project_line();
-  clrk_draw_todos();
-
   if (!clrk_load()) {
     /* Show help screen */
     clrk_draw_help();
+    clrk_draw_status("Couldn't load config");
+    /* wait for ANY input key */
+    tb_present();
+    struct tb_event event;
+    while (tb_poll_event(&event)) {
+      if (event.type == TB_EVENT_KEY) {
+        break;
+      }
+    }
   }
 
+  clrk_draw();
   tb_set_cursor(TB_HIDE_CURSOR, TB_HIDE_CURSOR);
 
   LOG("END");
@@ -449,6 +453,7 @@ void clrk_loop_normal(void)
           /* Delete project */
           LOG(RED"key 'P'"NOCOLOR);
           clrk_project_remove_current();
+          clrk_draw();
           break;
         case 'p':
           /* Add new project */
@@ -512,21 +517,30 @@ void clrk_loop_normal(void)
           LOG(RED"key 'S'"NOCOLOR);
           /* Write projects/todos to json file */
           clrk_save();
-          clrk_draw_status("written to "CLRK_CONFIG_FILE);
+          clrk_draw_status("written to json");
           break;
         case 'L':
           LOG(RED"key 'L'"NOCOLOR);
           /* Load json file */
           if (clrk_load()) {
-            clrk_draw_status("loaded config "CLRK_CONFIG_FILE);
+            clrk_draw();
+            clrk_draw_status("loaded json");
           } else {
-            clrk_draw_status("cannot find config "CLRK_CONFIG_FILE);
+            clrk_draw_status("cannot find json");
           }
           break;
         case '?':
           LOG(RED"key '?'"NOCOLOR);
           /* Show help box */
           clrk_draw_help();
+          tb_present();
+          struct tb_event event;
+          while (tb_poll_event(&event)) {
+            if (event.type == TB_EVENT_KEY) {
+              break;
+            }
+          }
+          clrk_draw_todos();
           break;
         case '0':
           LOG(RED"key '0'"NOCOLOR);

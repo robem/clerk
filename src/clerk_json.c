@@ -163,21 +163,17 @@ bool clrk_load(void)
   clrk_list_t *elem;
 
   /* Free existing projects and todos  */
-  if (clerk.project_list != NULL) {
-    for (elem = clerk.project_list; elem; elem = elem->next) {
-      clrk_project_set_current(clrk_list_data(elem));
-      clrk_project_remove_current();
-    }
+  while (clerk.current) {
+    clrk_project_remove_current();
   }
 
-  LOG("before openfile");
   /* Load config file */
   clerk.json = clerk.json ? clerk.json : CLRK_CONFIG_FILE;
+  LOG("before openfile %s", clerk.json);
   config = fopen(clerk.json, "r");
 
   LOG("before draw status");
   if (config == NULL) {
-    clrk_draw_status("Cannot open config file "CLRK_CONFIG_FILE);
     LOG("END");
     return false;
   }
