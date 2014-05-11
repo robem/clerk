@@ -249,6 +249,7 @@ void clrk_draw_help(void)
     "t: Create new todo",
     "T: Delete current todo",
     "e: Edit current todo",
+    "Space: Toggle todo state",
     "",
     "ESC: Cancel input",
     "",
