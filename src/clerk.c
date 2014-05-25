@@ -366,6 +366,25 @@ static clrk_list_t* clrk_todo_prev(void)
   return project->current;
 }
 
+static clrk_list_t* clrk_todo_move_down(void)
+{
+  HERE();
+  clrk_project_t* project = clrk_list_data(clerk.current);
+  if (project && project->current && project->current->next) {
+    clrk_list_t* current = project->current;
+    clrk_list_t* next = project->current->next;
+
+    /* dequeue our element and reinsert it after the next one */
+    clrk_list_remove(current);
+    clrk_list_insert(next, current);
+
+    clrk_draw_todos();
+  }
+  LOG("current todo "PTR, project->current);
+  LOG("END");
+  return project->current;
+}
+
 void clrk_todo_tick_off(void)
 {
   HERE();
@@ -509,6 +528,13 @@ void clrk_loop_normal(void)
           /* Go down */
           if (clerk.current) {
             clrk_todo_prev();
+          }
+          break;
+        case 'J':
+          LOG(RED"key 'J'"NOCOLOR);
+          /* Move the todo down */
+          if (clerk.current) {
+            clrk_todo_move_down();
           }
           break;
         case 'S':

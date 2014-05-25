@@ -240,6 +240,7 @@ void clrk_draw_help(void)
     "h: Move to previous project",
     "l: Move to next project",
     "j: Move to next todo",
+    "J: Move the current todo down in the list",
     "k: Move to previous todo",
     "",
     "Action keys",
