@@ -23,6 +23,7 @@ typedef struct clrk_list {
 void clrk_list_free(clrk_list_t *list);
 
 clrk_list_t*  clrk_list_add(clrk_list_t **list, void *data);
+clrk_list_t*  clrk_list_insert(clrk_list_t* list, clrk_list_t* elem);
 clrk_list_t*  clrk_list_remove(clrk_list_t *elem);
 void*         clrk_list_data(clrk_list_t *list);
 clrk_list_t*  clrk_list_next(clrk_list_t *list);
