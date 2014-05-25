@@ -339,13 +339,12 @@ static void clrk_todo_remove_current(void)
 
 static clrk_list_t* clrk_todo_next(void) {
   HERE();
-  clrk_project_t *project;
-  if (clerk.current) {
-    project = clrk_list_data(clerk.current);
-    if (project && project->current && project->current->next) {
-      project->current = project->current->next;
-      clrk_draw_todos();
-    }
+  assert(clerk.current);
+
+  clrk_project_t* project = clrk_list_data(clerk.current);
+  if (project && project->current && project->current->next) {
+    project->current = project->current->next;
+    clrk_draw_todos();
   }
   LOG("current todo "PTR, project->current);
   LOG("END");
@@ -355,13 +354,12 @@ static clrk_list_t* clrk_todo_next(void) {
 static clrk_list_t* clrk_todo_prev(void)
 {
   HERE();
-  clrk_project_t *project;
-  if (clerk.current) {
-    project = clrk_list_data(clerk.current);
-    if (project && project->current && project->current->prev) {
-      project->current = project->current->prev;
-      clrk_draw_todos();
-    }
+  assert(clerk.current);
+
+  clrk_project_t* project = clrk_list_data(clerk.current);
+  if (project && project->current && project->current->prev) {
+    project->current = project->current->prev;
+    clrk_draw_todos();
   }
   LOG("current todo "PTR, project->current);
   LOG("END");
