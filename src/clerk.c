@@ -6,12 +6,14 @@ static char* clrk_input(char *text)
 {
   HERE();
   unsigned i, cx, cy;
-  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
   struct tb_event event;
+  bool space = false;
+  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
+
+  memset((void*)buffer, '\0', CLRK_INPUT_BUFFER_SIZE);
 
   cy = tb_height() - 1;
-  cx = 3;
-  i = 0;
+  cx = 2;
 
   clrk_draw_show_input_line();
   tb_present();
@@ -19,43 +21,68 @@ static char* clrk_input(char *text)
   /* Draw given text and set cursor at the end */
   if (text) {
     strncpy(buffer, text, CLRK_INPUT_BUFFER_SIZE);
-    i = strlen(text);
+    clrk_draw_text(cx, cy, text, 15, CLRK_COLOR_INPUT_BG);
     cx += strlen(text);
-    clrk_draw_text(2, cy, text, 15, CLRK_COLOR_INPUT_BG);
-    tb_set_cursor(2 + strlen(text), cy);
+    tb_set_cursor(cx, cy);
     tb_present();
   }
 
   /* Start input loop */
   while (tb_poll_event(&event)) {
+    i = cx - 2;
     if (event.type == TB_EVENT_KEY) {
+      space = (event.key == TB_KEY_SPACE);
+
       if (event.key == TB_KEY_ESC) {
         break;
       } else if (event.key == TB_KEY_ENTER) {
         if (i < CLRK_INPUT_BUFFER_SIZE) {
           buffer[i] = '\0';
         }
-        LOG("END");
         clrk_draw_remove_input_line();
+        LOG("END; return buffer \"%s\" @ %p", buffer, buffer);
         return buffer;
       } else if (event.key == TB_KEY_BACKSPACE || event.key == TB_KEY_BACKSPACE2) {
         if (i > 0) {
-          tb_change_cell(2 + (--i), tb_height() - 1, ' ', 15, CLRK_COLOR_INPUT_BG);
-          buffer[i] = '\0';
-          tb_set_cursor((cx--)-2, cy);
+          size_t tail = strlen(&buffer[i]);
+          if (tail) {
+            LOG("copy tail [%zu]", tail);
+            /* Shift tail by 1 to the left */
+            strcpy(&buffer[i-1], &buffer[i]);
+            /* Paint over last character */
+            buffer[i+tail-1] = ' ';
+            clrk_draw_text(cx - 1, cy, &buffer[i-1], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+            /* Clear last character */
+            buffer[i+tail-1] = '\0';
+          } else {
+            LOG("remove last char");
+            buffer[i-1] = '\0';
+            tb_change_cell(cx - 1, cy, '\0', CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+          }
+          tb_set_cursor(--cx, cy);
         }
-      } else if (event.ch > 31 && event.ch < 127) {
-        LOG("input key %c", event.ch);
+      } else if ((event.ch > 31 && event.ch < 127) || space) {
+        LOG("input [%d] key %c", i, event.ch);
         if (i < CLRK_INPUT_BUFFER_SIZE) {
-          tb_change_cell(2 + i, tb_height() - 1, event.ch, 15, CLRK_COLOR_INPUT_BG);
-          buffer[i++] = event.ch;
-          tb_set_cursor(cx++, cy);
+          if (buffer[i] == '\0') {
+            // Append character
+            tb_change_cell(cx, tb_height() - 1, event.ch, CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+            buffer[i] = space ? ' ' : event.ch;
+          } else {
+            // Add character in between
+            strcpy(&buffer[i+1], &buffer[i]);
+            buffer[i] = space ? ' ' : event.ch;
+            clrk_draw_text(cx, cy, &buffer[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+          }
+          tb_set_cursor(++cx, cy);
         }
-      } else if (event.key == TB_KEY_SPACE) {
-        if (i < CLRK_INPUT_BUFFER_SIZE) {
-          tb_change_cell(2 + i, tb_height() - 1, ' ', 15, CLRK_COLOR_INPUT_BG);
-          buffer[i++] = ' ';
-          tb_set_cursor(cx++, cy);
+      } else if (event.key == TB_KEY_ARROW_LEFT) {
+        if (i > 0) {
+          tb_set_cursor(--cx, cy);
+        }
+      } else if (event.key == TB_KEY_ARROW_RIGHT) {
+        if (i < CLRK_INPUT_BUFFER_SIZE && buffer[i] != '\0') {
+          tb_set_cursor(++cx, cy);
         }
       }
       LOG("key %d", event.key);
