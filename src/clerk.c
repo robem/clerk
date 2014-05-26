@@ -266,7 +266,7 @@ clrk_todo_t* clrk_todo_add(const char *text)
   assert(todo);
 
   if (text == NULL) {
-     free(input);
+    free(input);
   }
 
   elem = clrk_list_add(&project->todo_list, todo);
@@ -300,7 +300,7 @@ static void clrk_todo_edit_current(void)
 
       input = clrk_input(todo->message);
       if (input == NULL || input == '\0') {
-         return;
+        return;
       }
       strncpy(todo->message, input, CLRK_TODO_MESSAGE_SIZE);
       clrk_draw_todos();
@@ -445,113 +445,121 @@ void clrk_loop_normal(void)
     clrk_draw_todos();
     tb_present();
     if (event.type == TB_EVENT_KEY) {
-      switch (event.ch) {
-        case 'Q':
-          LOG(RED"key 'Q'"NOCOLOR);
-          return;
-        case 'P':
-          /* Delete project */
-          LOG(RED"key 'P'"NOCOLOR);
-          clrk_project_remove_current();
-          clrk_draw();
-          break;
-        case 'p':
-          /* Add new project */
-          LOG(RED"key 'p'"NOCOLOR);
-          clrk_project_add(NULL);
-          break;
-        case 'T':
-          /* Add new todo */
-          LOG(RED"key 'T'"NOCOLOR);
-          clrk_todo_remove_current();
-          break;
-        case 't':
-          /* Add new todo */
-          LOG(RED"key 't'"NOCOLOR);
-          clrk_todo_add(NULL);
-          break;
-        case 'E':
-          /* Edit project */
-          LOG(RED"key 'E'"NOCOLOR);
-          clrk_project_edit_current();
-          break;
-        case 'e':
-          /* Edit todo */
-          LOG(RED"key 'e'"NOCOLOR);
-          clrk_todo_edit_current();
-          break;
-        case 'r':
-          /* Mark current todo as 'running'/'next' */
-          LOG(RED"key 'r'"NOCOLOR);
-          clrk_todo_running();
-          break;
-        case 'h':
-          /* Go left */
-          LOG(RED"key 'h'"NOCOLOR);
-          if (clerk.current) {
-            clrk_project_set_current(clerk.current->prev);
-          }
-          break;
-        case 'l':
-          LOG(RED"key 'l'"NOCOLOR);
-          /* Go right */
-          if (clerk.current) {
-            clrk_project_set_current(clerk.current->next);
-          }
-          break;
-        case 'j':
-          LOG(RED"key 'j'"NOCOLOR);
-          /* Go down */
-          if (clerk.current) {
-            clrk_todo_next();
-          }
-          break;
-        case 'k':
-          LOG(RED"key 'k'"NOCOLOR);
-          /* Go down */
-          if (clerk.current) {
-            clrk_todo_prev();
-          }
-          break;
-        case 'S':
-          LOG(RED"key 'S'"NOCOLOR);
-          /* Write projects/todos to json file */
-          clrk_save();
-          clrk_draw_status("written to json");
-          break;
-        case 'L':
-          LOG(RED"key 'L'"NOCOLOR);
-          /* Load json file */
-          if (clrk_load()) {
+      /* Go left */
+      if (event.key == TB_KEY_ARROW_LEFT
+          || event.ch == 'h') {
+        LOG(RED"key 'h' or arrow left"NOCOLOR);
+        if (clerk.current) {
+          clrk_project_set_current(clerk.current->prev);
+        }
+      /* Go right */
+      } else if (event.key == TB_KEY_ARROW_RIGHT
+          || event.ch == 'l') {
+        LOG(RED"key 'l' or arrow right"NOCOLOR);
+        if (clerk.current) {
+          clrk_project_set_current(clerk.current->next);
+        }
+      /* Go down */
+      } else if (event.key == TB_KEY_ARROW_DOWN
+          || event.ch == 'j') {
+        LOG(RED"key 'j' or arrow down"NOCOLOR);
+        if (clerk.current) {
+          clrk_todo_next();
+        }
+      /* Go up */
+      } else if (event.key == TB_KEY_ARROW_UP
+          || event.ch == 'k') {
+        LOG(RED"key 'k' or arrow up"NOCOLOR);
+        if (clerk.current) {
+          clrk_todo_prev();
+        }
+      } else {
+        switch (event.ch) {
+          case 'Q':
+            LOG(RED"key 'Q'"NOCOLOR);
+            return;
+          case 'P':
+            /* Delete project */
+            LOG(RED"key 'P'"NOCOLOR);
+            clrk_project_remove_current();
             clrk_draw();
-            clrk_draw_status("loaded json");
-          } else {
-            clrk_draw_status("cannot find json");
-          }
-          break;
-        case '?':
-          LOG(RED"key '?'"NOCOLOR);
-          /* Show help box */
-          clrk_draw_help();
-          tb_present();
-          struct tb_event event;
-          while (tb_poll_event(&event)) {
-            if (event.type == TB_EVENT_KEY) {
-              break;
+            break;
+          case 'p':
+            /* Add new project */
+            LOG(RED"key 'p'"NOCOLOR);
+            clrk_project_add(NULL);
+            break;
+          case 'T':
+            /* Add new todo */
+            LOG(RED"key 'T'"NOCOLOR);
+            clrk_todo_remove_current();
+            break;
+          case 't':
+            /* Add new todo */
+            LOG(RED"key 't'"NOCOLOR);
+            clrk_todo_add(NULL);
+            break;
+          case 'E':
+            /* Edit project */
+            LOG(RED"key 'E'"NOCOLOR);
+            clrk_project_edit_current();
+            break;
+          case 'e':
+            /* Edit todo */
+            LOG(RED"key 'e'"NOCOLOR);
+            clrk_todo_edit_current();
+            break;
+          case 'r':
+            /* Mark current todo as 'running'/'next' */
+            LOG(RED"key 'r'"NOCOLOR);
+            clrk_todo_running();
+            break;
+          case 'S':
+            LOG(RED"key 'S'"NOCOLOR);
+            /* Write projects/todos to json file */
+            clrk_save();
+            clrk_draw_status("written to json");
+            break;
+          case 'L':
+            LOG(RED"key 'L'"NOCOLOR);
+            /* Load json file */
+            if (clrk_load()) {
+              clrk_draw();
+              clrk_draw_status("loaded json");
+            } else {
+              clrk_draw_status("cannot find json");
             }
-          }
-          clrk_draw_todos();
-          break;
-        case '0':
-          LOG(RED"key '0'"NOCOLOR);
-          /* Go to the first project */
-          clrk_project_set_current(clerk.project_list);
-          break;
-          /* case '$': */
-          /*   #<{(| Go to the last project |)}># */
-          /*   LOG(RED"key '$'"NOCOLOR); */
-          /*   clrk_project_set_current(clerk.project_list->prev); */
-          /*   break; */
+            break;
+          case '?':
+            LOG(RED"key '?'"NOCOLOR);
+            /* Show help box */
+            clrk_draw_help();
+            tb_present();
+            struct tb_event event;
+            while (tb_poll_event(&event)) {
+              if (event.type == TB_EVENT_KEY) {
+                break;
+              } else if (event.type == TB_EVENT_RESIZE) {
+                if (tb_width() > CLRK_MIN_WIDTH && tb_height() > CLRK_MIN_HEIGHT) {
+                  clrk_draw();
+                  clrk_draw_help();
+                  tb_present();
+                }
+              }
+            }
+            clrk_draw_todos();
+            break;
+          case '0':
+            LOG(RED"key '0'"NOCOLOR);
+            /* Go to the first project */
+            clrk_project_set_current(clerk.project_list);
+            break;
+            /* case '$': */
+            /*   #<{(| Go to the last project |)}># */
+            /*   LOG(RED"key '$'"NOCOLOR); */
+            /*   clrk_project_set_current(clerk.project_list->prev); */
+            /*   break; */
+        }
       }
 
       switch (event.key) {
@@ -563,6 +571,9 @@ void clrk_loop_normal(void)
           break;
       }
     } else if (event.type == TB_EVENT_RESIZE) {
+      if (tb_width() > CLRK_MIN_WIDTH && tb_height() > CLRK_MIN_HEIGHT) {
+        clrk_draw();
+      }
     }
     tb_present();
   }

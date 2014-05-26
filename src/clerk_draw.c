@@ -229,7 +229,7 @@ void clrk_draw_help(void)
   unsigned width  = tb_width();
   unsigned i = 0;
 
-  /* TODO: Keys should be obtained from an config file */
+  /* TODO: Keys should be obtained from a config file */
   /* Define help text */
   const char *help_text[] = {
     "",
@@ -269,6 +269,10 @@ void clrk_draw_help(void)
   }
   LOG("Number of helper text lines %d", lines);
 
+  if (lines >= height) {
+    clrk_draw_status("Window too small to draw help box.");
+    return;
+  }
   /* Draw a box in the bottom of the screen */
   unsigned start_line = (height - 1) - lines;
   unsigned text_height = height - start_line;

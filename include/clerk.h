@@ -13,8 +13,11 @@
 #include <clerk_json.h>
 #include <clerk_log.h>
 
+#define CLRK_MIN_HEIGHT 10
+#define CLRK_MIN_WIDTH  20
+
 #define CLRK_CONFIG_FILE "clerk.json"
-#define CLRK_CONFIG_X "marked"
+#define CLRK_CONFIG_X    "marked"
 #define CLRK_CONFIG_TEXT "text"
 
 #define CLRK_NUM_PRJ  20
