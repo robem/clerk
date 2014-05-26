@@ -44,7 +44,7 @@
 * `E` edit current project
 * `t` new todo
 * `T` delete current todo
-* `e` edit current project
+* `e` edit current todo
 * `L` load config
 * `?` show help
 * `S` save to JSON file
