@@ -36,9 +36,6 @@ static char* clrk_input(char *text)
       if (event.key == TB_KEY_ESC) {
         break;
       } else if (event.key == TB_KEY_ENTER) {
-        if (i < CLRK_INPUT_BUFFER_SIZE) {
-          buffer[i] = '\0';
-        }
         clrk_draw_remove_input_line();
         LOG("END; return buffer \"%s\" @ %p", buffer, buffer);
         return buffer;
