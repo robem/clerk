@@ -25,7 +25,8 @@ void clrk_save(void)
   clrk_project_t *project;
   clrk_todo_t *todo;
 
-  file = fopen(CLRK_CONFIG_FILE, "w");
+  clerk.json = clerk.json ? clerk.json : CLRK_CONFIG_FILE;
+  file = fopen(clerk.json, "w");
   assert(file);
 
   /* Set print callback and pretty output */
@@ -47,7 +48,7 @@ void clrk_save(void)
     yajl_gen_array_open(g);
 
     FOR_EACH(todo, project->todo_list) {
-      /* 
+      /*
        * Each todo is represented as tuple
        * { CLRK_CONFIG_TEXT : <string>,
        *   CLRK_CONFIG_X    : <bool> }
@@ -187,7 +188,7 @@ bool clrk_load(void)
     clrk_draw_status("File size greater than buffer size: "CLRK_CONFIG_FILE);
     goto out;
   }
-  
+
   LOG("before read");
   fread(buffer, file_size, 1, config);
 
@@ -204,8 +205,8 @@ bool clrk_load(void)
   };
 
   clrk_config_tracker_t parser_context = {
-    .in_todo = false, 
-    .marked = false, 
+    .in_todo = false,
+    .marked = false,
     .text = false
   };
 
