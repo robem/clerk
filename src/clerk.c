@@ -153,7 +153,7 @@ clrk_project_t* clrk_project_add(const char *name)
   LOG("current lproject "PTR, clerk.current);
 
   clerk.number_of_projects++;
-  clrk_draw_project_line();
+  clrk_draw();
 
   LOG("after draw line");
 
