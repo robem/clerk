@@ -413,6 +413,37 @@ void clrk_todo_tick_off(void)
   LOG("END");
 }
 
+static void clrk_todo_select_last(void)
+{
+  HERE();
+  clrk_project_t *project;
+  clrk_list_t *e;
+
+  if (clerk.current) {
+    project = clrk_list_data(clerk.current);
+    e = project->todo_list;
+
+    while (e->next) {
+      e = e->next;
+    }
+
+    project->current = e;
+    clrk_draw_todos();
+  }
+}
+
+static void clrk_todo_select_first(void)
+{
+  HERE();
+  clrk_project_t *project;
+
+  if (clerk.current) {
+    project = clrk_list_data(clerk.current);
+    project->current = project->todo_list;
+    clrk_draw_todos();
+  }
+}
+
 static void clrk_todo_running(void)
 {
   HERE();
@@ -466,7 +497,7 @@ void clrk_init(void)
 void clrk_loop_normal(void)
 {
   HERE();
-  char *input;
+  char *input, last_char_key;
   struct tb_event event;
   clrk_project_t *p;
 
@@ -504,40 +535,53 @@ void clrk_loop_normal(void)
         }
       } else {
         switch (event.ch) {
-          case 'Q':
-            LOG(RED"key 'Q'"NOCOLOR);
-            return;
-          case 'P':
-            /* Delete project */
-            LOG(RED"key 'P'"NOCOLOR);
-            clrk_project_remove_current();
-            clrk_draw();
-            break;
-          case 'p':
-            /* Add new project */
-            LOG(RED"key 'p'"NOCOLOR);
-            clrk_project_add(NULL);
-            break;
-          case 'T':
-            /* Add new todo */
-            LOG(RED"key 'T'"NOCOLOR);
-            clrk_todo_remove_current();
-            break;
-          case 't':
-            /* Add new todo */
-            LOG(RED"key 't'"NOCOLOR);
-            clrk_todo_add(NULL);
+          case 'e':
+            /* Edit todo */
+            LOG(RED"key 'e'"NOCOLOR);
+            clrk_todo_edit_current();
             break;
           case 'E':
             /* Edit project */
             LOG(RED"key 'E'"NOCOLOR);
             clrk_project_edit_current();
             break;
-          case 'e':
-            /* Edit todo */
-            LOG(RED"key 'e'"NOCOLOR);
-            clrk_todo_edit_current();
+          case 'g':
+            /* Select first todo */
+            if (last_char_key == 'g') {
+              LOG(RED"key 'gg'"NOCOLOR);
+              clrk_todo_select_first();
+              last_char_key = '\0';
+            }
             break;
+          case 'G':
+            /* Select last todo */
+            LOG(RED"key 'G'"NOCOLOR);
+            clrk_todo_select_last();
+            break;
+          case 'L':
+            LOG(RED"key 'L'"NOCOLOR);
+            /* Load json file */
+            if (clrk_load()) {
+              clrk_draw();
+              clrk_draw_status("loaded json");
+            } else {
+              clrk_draw_status("cannot find json");
+            }
+            break;
+          case 'p':
+            /* Add new project */
+            LOG(RED"key 'p'"NOCOLOR);
+            clrk_project_add(NULL);
+            break;
+          case 'P':
+            /* Delete project */
+            LOG(RED"key 'P'"NOCOLOR);
+            clrk_project_remove_current();
+            clrk_draw();
+            break;
+          case 'Q':
+            LOG(RED"key 'Q'"NOCOLOR);
+            return;
           case 'r':
             /* Mark current todo as 'running'/'next' */
             LOG(RED"key 'r'"NOCOLOR);
@@ -549,15 +593,15 @@ void clrk_loop_normal(void)
             clrk_save();
             clrk_draw_status("written to json");
             break;
-          case 'L':
-            LOG(RED"key 'L'"NOCOLOR);
-            /* Load json file */
-            if (clrk_load()) {
-              clrk_draw();
-              clrk_draw_status("loaded json");
-            } else {
-              clrk_draw_status("cannot find json");
-            }
+          case 't':
+            /* Add new todo */
+            LOG(RED"key 't'"NOCOLOR);
+            clrk_todo_add(NULL);
+            break;
+          case 'T':
+            /* Add new todo */
+            LOG(RED"key 'T'"NOCOLOR);
+            clrk_todo_remove_current();
             break;
           case '?':
             LOG(RED"key '?'"NOCOLOR);
@@ -603,6 +647,9 @@ void clrk_loop_normal(void)
       if (tb_width() > CLRK_MIN_WIDTH && tb_height() > CLRK_MIN_HEIGHT) {
         clrk_draw();
       }
+    }
+    if (event.ch) {
+      last_char_key = event.ch;
     }
     tb_present();
   }
