@@ -3,13 +3,16 @@
 ## Current status
 
 * Not even close to v1.0
-* Still some segfaults, experimenting with colors, and keystrokes
+* Runtime errors expected, experimenting with keystrokes
+* No tests right now but I use it every day
 
 ## Build
 
 `$CLERK = 'wherever your git clone finished'`
 
 ### Clone termbox and yajl
+
+`cd $CLERK`
 
 `git submodule update --init`
 
