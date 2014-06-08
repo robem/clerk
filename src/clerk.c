@@ -153,7 +153,7 @@ clrk_project_t* clrk_project_add(const char *name)
   LOG("current lproject "PTR, clerk.current);
 
   clerk.number_of_projects++;
-  clrk_draw_project_line();
+  clrk_draw();
 
   LOG("after draw line");
 
@@ -228,7 +228,7 @@ void clrk_project_remove_current(void)
     }
     clerk.current = clerk.project_list;
   } else {
-    /* Set current to next or prev of removed element */ 
+    /* Set current to next or prev of removed element */
     if (clerk.current->next) {
       clerk.current = clerk.current->next;
     } else {
@@ -256,6 +256,7 @@ static clrk_todo_t* clrk_todo_new(const char *text)
   strncpy(todo->message, text, CLRK_TODO_MESSAGE_SIZE);
   todo->checked = false;
   todo->running = false;
+  todo->visible = false;
 
   LOG("Add new todo: %s", text);
 
@@ -372,6 +373,7 @@ static clrk_list_t* clrk_todo_next(void) {
     }
   }
   LOG("current todo "PTR, project->current);
+  LOG("current todo msg: %s", ((clrk_todo_t*)(clrk_list_data(project->current)))->message);
   LOG("END");
   return project->current;
 }
@@ -449,6 +451,9 @@ void clrk_init(void)
         break;
       }
     }
+  } else if (clerk.current) {
+    clrk_project_t *project = clrk_list_data(clerk.current);
+    project->current = project->todo_list;
   }
 
   clrk_draw();

@@ -36,6 +36,7 @@ typedef struct clrk_todo {
   char message[CLRK_TODO_MESSAGE_SIZE];
   bool checked;
   bool running;
+  bool visible;
 } clrk_todo_t;
 
 typedef struct clrk_project {

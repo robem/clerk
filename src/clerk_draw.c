@@ -153,12 +153,69 @@ void clrk_draw_todos(void)
     project = clrk_list_data(clerk.current);
 
     if (project && project->todo_list) {
-      LOG("proj->todo_list %p",project->todo_list);
+      /* LOG("proj->todo_list %p", project->todo_list); */
+
+      unsigned visible_todos = (CLRK_DRAW_STATUS_LINE - CLRK_DRAW_TODO_START_Y) / 3;
+      LOG("visible_todos = %d, project->number_of_todos = %d", visible_todos, project->number_of_todos);
+
+      /* Calculate the first todo to draw */
+      clrk_list_t *start = project->todo_list;
+      if (visible_todos < project->number_of_todos) {
+        unsigned index = 0;
+        clrk_list_t *e = start;
+        clrk_todo_t *t = NULL;
+        clrk_todo_t *active_todo = clrk_list_data(project->current);
+        LOG("before loop");
+        while (e) {
+          index++;
+          t = clrk_list_data(e);
+          /* Scroll upwards/downwards: common case */
+          if (active_todo->visible && t->visible) {
+            start = e;
+            LOG("scroll 1: active \"%s\", t \"%s\"", active_todo->message, t->message);
+            break;
+          }
+          /* Scroll upwards: top line is active todo */
+          if (t == active_todo && !t->visible && e->next
+              && ((clrk_todo_t*)clrk_list_data(e->next))->visible) {
+            start = e;
+            LOG("scroll 2: active \"%s\", t \"%s\"", active_todo->message, t->message);
+            break;
+          }
+          /* Scroll downwards: active_todo not found yet */
+          if (index > visible_todos) {
+            start = start->next;
+            LOG("scroll: next");
+          }
+          /* Scroll downwards: bottom line is active_todo && initial draw */
+          if (t == active_todo && !t->visible) {
+            LOG("scroll 3: active \"%s\", t \"%s\"", active_todo->message, t->message);
+            break;
+          }
+          e = e->next;
+        }
+      }
+
       /* Draw todo_list */
+      LOG("eoLoop");
+      clrk_todo_t *start_todo = clrk_list_data(start);
+      bool start_seen = false;
       x = CLRK_DRAW_TODO_START_X;
       y = CLRK_DRAW_TODO_START_Y;
       FOR_EACH(todo, project->todo_list) {
-        LOG("I'M in foreach todo");
+        LOG("I'M in foreach todo: %s", todo->message);
+
+        if (!start_seen && todo == start_todo) {
+          start_seen = true;
+        }
+
+        if (start_seen && visible_todos) {
+          todo->visible = true;
+          visible_todos--;
+        } else {
+          todo->visible = false;
+          continue;
+        }
 
         /* Make checkbox red or green */
         if (todo->running) {
@@ -174,7 +231,7 @@ void clrk_draw_todos(void)
         } else {
           clrk_draw_text(x+4, y, todo->message, CLRK_COLOR_TODO_FG, CLRK_COLOR_TODO_BG);
         }
-        LOG("\ttodo message: %s", todo->message);
+        LOG("\tdraw todo: x=%d, y=%d, msg=%s, visible=%s, visible_todos=%d", x+4, y, todo->message, todo->visible?"true":"false", visible_todos);
         y += 3;
       }
     }
