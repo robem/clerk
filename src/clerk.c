@@ -2,13 +2,12 @@
 
 clrk_clerk_t clerk;
 
-static char* clrk_input(char *text)
+static void clrk_input(char *text, char *buffer)
 {
   HERE();
   unsigned i, cx, cy;
   struct tb_event event;
   bool space = false;
-  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
 
   memset((void*)buffer, '\0', CLRK_INPUT_BUFFER_SIZE);
 
@@ -38,7 +37,7 @@ static char* clrk_input(char *text)
       } else if (event.key == TB_KEY_ENTER) {
         clrk_draw_remove_input_line();
         LOG("END; return buffer \"%s\" @ %p", buffer, buffer);
-        return buffer;
+        return;
       } else if (event.key == TB_KEY_BACKSPACE || event.key == TB_KEY_BACKSPACE2) {
         if (i > 0) {
           size_t tail = strlen(&buffer[i]);
@@ -89,88 +88,76 @@ static char* clrk_input(char *text)
   }
 
   clrk_draw_remove_input_line();
-  return NULL;
+  return;
 }
 
-static clrk_project_t* clrk_project_new(const char *name)
+static clrk_project_t * clrk_project_new(const char *name)
 {
   HERE();
-  clrk_project_t *project;
-  project = (clrk_project_t*)malloc(sizeof(clrk_project_t));
-
+  clrk_project_t *project = malloc(sizeof(clrk_project_t));
   assert(project);
 
   memset((void*)project->name, 0, CLRK_PRJ_NAME_SIZE);
   if (name && *name != '\0') {
     strncpy(project->name, name, CLRK_PRJ_NAME_SIZE);
   } else {
-    strncpy(project->name, "NONAME", CLRK_PRJ_NAME_SIZE);
+    /* Set default name if name is empty string or nullptr */
+    strncpy(project->name, "NONAME", 7);
   }
   memset((void*)name, 0, CLRK_PRJ_NAME_SIZE);
 
-  project->todo_list = NULL;
   project->current = NULL;
-  project->number_of_todos = 0;
+  project->todo_list = malloc(sizeof(clrk_list_t));
+  assert(project->todo_list);
+  project->todo_list->first        = NULL;
+  project->todo_list->last         = NULL;
+  project->todo_list->num_of_elems = 0;
 
-  LOG("add new project: %s "PTR, project->name, project);
-
+  LOG("new project: %s "PTR, project->name, project);
   LOG("END");
   return project;
 }
 
-clrk_project_t* clrk_project_add(const char *name)
+clrk_project_t * clrk_project_add(const char *name)
 {
   HERE();
-  clrk_list_t *elem;
+  clrk_list_elem_t *elem;
   clrk_project_t *project;
-  char *input;
+  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
 
   if (name == NULL) {
-    input = clrk_input(NULL);
-    if (input == NULL) {
-      return NULL;
-    }
+    /* Create projects interactively */
+    clrk_input(NULL, buffer);
   } else {
-    input = (char*)name;
+    /* Create projects while parsing json file */
+    strncpy(buffer, name, CLRK_INPUT_BUFFER_SIZE);
   }
 
-  project = clrk_project_new(input);
+  project = clrk_project_new(buffer);
 
-  if (name == NULL) {
-    free(input);
-  }
+  free(buffer);
 
-  LOG("%s current lproject "PTR, name, clerk.current);
-  elem = clrk_list_add(&clerk.project_list, project);
-  assert(elem);
-
-  /* clerk.project_list->prev = elem; */
-
-  /* if (clerk.current == NULL) { */
-  /*   clerk.current = clerk.project_list; */
-  /* } */
+  elem = clrk_list_add(clerk.project_list, project);
   clerk.current = elem;
-  LOG("current lproject "PTR, clerk.current);
+  clerk.project_list->num_of_elems++;
 
-  clerk.number_of_projects++;
   clrk_draw();
 
-  LOG("after draw line");
-
   LOG("END");
   return project;
 }
 
-clrk_list_t* clrk_project_set_current(clrk_list_t *project)
+clrk_list_elem_t * clrk_project_set_current(clrk_list_elem_t *elem)
 {
   HERE();
-  if (project) {
-    clerk.current = project;
+
+  if (elem) {
+    clerk.current = elem;
     clrk_draw();
   }
-  LOG("lproj "PTR, project);
+
   LOG("END");
-  return project;
+  return elem;
 }
 
 static void clrk_project_edit_current(void)
@@ -178,79 +165,77 @@ static void clrk_project_edit_current(void)
   HERE();
   clrk_project_t *project;
   clrk_todo_t *todo;
-  char *input;
+  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
+
+  if (buffer == NULL) {
+    LOG("Couldn't allocate input buffer");
+    return;
+  }
 
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
 
-    input = clrk_input(project->name);
-    if (input == NULL || input == '\0') {
+    clrk_input(project->name, buffer);
+    if (buffer == '\0') {
+      /* No empty string permitted */
       return;
     }
-    strncpy(project->name, input, CLRK_PRJ_NAME_SIZE);
+    strncpy(project->name, buffer, CLRK_PRJ_NAME_SIZE);
     clrk_draw_project_line();
   }
+
+  free(buffer);
 }
 
 void clrk_project_remove_current(void)
 {
   HERE();
   int i;
-  clrk_list_t *destroy_me;
+  clrk_list_elem_t *destroy_me;
   clrk_project_t *project;
 
   if (clerk.project_list == NULL || clerk.current == NULL) {
+    LOG("No active project found.");
     return;
   }
 
-  destroy_me = clerk.current;
-  project = clrk_list_data(clerk.current);
+  project = clrk_list_elem_data(clerk.current);
 
+  clrk_project_t *p;
+  LIST_FOREACH(p, clerk.project_list) {
+    LOG("\t"PTR" %s", p, p->name);
+  }
   /* Remove from project list */
-  clrk_list_remove(destroy_me);
+  clrk_list_elem_remove(clerk.project_list, clerk.current);
 
-  /* Remove all todos of that project */
-  clrk_list_t *helper;
-  clrk_list_t *todo = project->todo_list;
-  while (todo) {
-    helper = todo;
-    clrk_list_free(todo);
-    todo = helper->next;
-  }
-  project->number_of_todos = 0;
+  /* Remove the whole project's todo list */
+  clrk_list_elem_t *helper_elem;
+  clrk_list_elem_t *todo_elem = project->todo_list->first;
+  while (todo_elem) {
+    free(clrk_list_elem_data(todo_elem));
 
-  LOG("old lproj "PTR, clerk.current);
-  if (clerk.current == clerk.project_list) {
-    /* If we remove list head then set head to NULL or next */
-    clerk.project_list = NULL;
-    if (clerk.number_of_projects > 0) {
-      clerk.project_list = clerk.current->next;
-    }
-    clerk.current = clerk.project_list;
-  } else {
-    /* Set current to next or prev of removed element */
-    if (clerk.current->next) {
-      clerk.current = clerk.current->next;
-    } else {
-      clerk.current = clerk.current->prev;
-    }
+    helper_elem = todo_elem->next;
+    clrk_list_elem_free(todo_elem);
+    todo_elem = helper_elem;
   }
-  LOG("current lproj "PTR, clerk.current);
+  free(project->todo_list);
 
   /* Destroy element */
-  clrk_list_free(destroy_me);
+  clrk_list_elem_free(clerk.current);
 
-  clerk.number_of_projects--;
+  /* Set new current project element */
+  clerk.current = clerk.project_list->first;
 
+  LIST_FOREACH(p, clerk.project_list) {
+    LOG("\t"PTR" %s", p, p->name);
+  }
   LOG("END");
 }
 
-static clrk_todo_t* clrk_todo_new(const char *text)
+static clrk_todo_t * clrk_todo_new(const char *text)
 {
   HERE();
-  clrk_todo_t *todo;
-
-  todo = (clrk_todo_t*)malloc(sizeof(clrk_todo_t));
+  clrk_todo_t *todo = malloc(sizeof(clrk_todo_t));
   assert(todo);
 
   strncpy(todo->message, text, CLRK_TODO_MESSAGE_SIZE);
@@ -264,46 +249,41 @@ static clrk_todo_t* clrk_todo_new(const char *text)
   return todo;
 }
 
-clrk_todo_t* clrk_todo_add(const char *text)
+clrk_todo_t * clrk_todo_add(const char *text)
 {
   HERE();
   clrk_project_t *project;
   clrk_todo_t *todo;
-  clrk_list_t *elem;
-  char *input;
+  clrk_list_elem_t *elem;
+  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
+
+  if (buffer == NULL) {
+    LOG("Couldn't allocate input buffer.");
+    return NULL;
+  }
 
   if (clerk.project_list == NULL) {
     return NULL;
   }
 
-  project = clrk_list_data(clerk.current);
+  project = clrk_list_elem_data(clerk.current);
 
   if (text == NULL) {
-    input = clrk_input(NULL);
-    if (input == NULL) {
-      return NULL;
-    }
+    clrk_input(NULL, buffer);
   } else {
-    input = (char*)text;
+    strncpy(buffer, text, CLRK_INPUT_BUFFER_SIZE);
   }
 
-  todo = clrk_todo_new(input);
+  todo = clrk_todo_new(buffer);
   assert(todo);
 
-  if (text == NULL) {
-    free(input);
-  }
+  free(buffer);
 
-  elem = clrk_list_add(&project->todo_list, todo);
+  elem = clrk_list_add(project->todo_list, todo);
   assert(elem);
 
-  /* if (project->current == NULL) { */
-  /*   project->current = elem; */
-  /* } */
   project->current = elem;
-  LOG("proj "PTR" ltodo "PTR, project, elem);
-
-  project->number_of_todos++;
+  project->todo_list->num_of_elems++;
   clrk_draw_todos();
 
   LOG("END");
@@ -315,22 +295,32 @@ static void clrk_todo_edit_current(void)
   HERE();
   clrk_project_t *project;
   clrk_todo_t *todo;
-  char *input;
+  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
+
+  if (buffer == NULL) {
+    LOG("Couldn't allocate input buffer.");
+    return;
+  }
 
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
 
     if (project->current) {
-      todo = clrk_list_data(project->current);
+      todo = clrk_list_elem_data(project->current);
 
-      input = clrk_input(todo->message);
-      if (input == NULL || input == '\0') {
-        return;
+      clrk_input(todo->message, buffer);
+      if (buffer == '\0') {
+        /* Deleting the whole todo text is not permitted. Use 'T' instead. */
+        goto end;
       }
-      strncpy(todo->message, input, CLRK_TODO_MESSAGE_SIZE);
+      strncpy(todo->message, buffer, CLRK_TODO_MESSAGE_SIZE);
       clrk_draw_todos();
     }
   }
+
+end:
+  free(buffer);
+  return;
 }
 
 static void clrk_todo_remove_current(void)
@@ -339,22 +329,21 @@ static void clrk_todo_remove_current(void)
   clrk_project_t *project;
 
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
 
     if (project->current) {
-      clrk_list_remove(project->current);
-      clrk_list_free(project->current);
+      clrk_list_elem_remove(project->todo_list, project->current);
+      clrk_list_elem_free(project->current);
 
-      project->number_of_todos--;
+      project->todo_list->num_of_elems--;
 
-      if (project->current == project->todo_list) {
-        project->todo_list = NULL;
+      if (project->current == project->todo_list->first) {
+        project->todo_list->first = NULL;
         if (project->current->next) {
-          project->todo_list = project->current->next;
+          project->todo_list->first = project->current->next;
         }
       }
-      project->current = project->todo_list;
-      LOG("proj "PTR" ltodo "PTR, project, project->current);
+      project->current = project->todo_list->first;
 
       LOG("END");
       clrk_draw_todos();
@@ -362,35 +351,35 @@ static void clrk_todo_remove_current(void)
   }
 }
 
-static clrk_list_t* clrk_todo_next(void) {
+static clrk_list_elem_t * clrk_todo_next(void) {
   HERE();
   clrk_project_t *project;
+
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
     if (project && project->current && project->current->next) {
       project->current = project->current->next;
       clrk_draw_todos();
     }
   }
-  LOG("current todo "PTR, project->current);
-  LOG("current todo msg: %s", ((clrk_todo_t*)(clrk_list_data(project->current)))->message);
+
   LOG("END");
   return project->current;
 }
 
-static clrk_list_t* clrk_todo_prev(void)
+static clrk_list_elem_t * clrk_todo_prev(void)
 {
   HERE();
   clrk_project_t *project;
+
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
     if (project && project->current && project->current->prev) {
       project->current = project->current->prev;
       clrk_draw_todos();
     }
   }
-  LOG("current todo "PTR, project->current);
-  LOG("END");
+
   return project->current;
 }
 
@@ -401,15 +390,16 @@ void clrk_todo_tick_off(void)
   clrk_todo_t *todo;
 
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
 
     if (project->current) {
-      todo = clrk_list_data(project->current);
+      todo = clrk_list_elem_data(project->current);
       todo->checked = todo->checked ? false : true;
       todo->running = false;
       clrk_draw_todos();
     }
   }
+
   LOG("END");
 }
 
@@ -417,19 +407,15 @@ static void clrk_todo_select_last(void)
 {
   HERE();
   clrk_project_t *project;
-  clrk_list_t *e;
+  clrk_list_elem_t *e;
 
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
-    e = project->todo_list;
-
-    while (e->next) {
-      e = e->next;
-    }
-
-    project->current = e;
+    project = clrk_list_elem_data(clerk.current);
+    project->current = project->todo_list->last;
     clrk_draw_todos();
   }
+
+  LOG("END");
 }
 
 static void clrk_todo_select_first(void)
@@ -438,10 +424,12 @@ static void clrk_todo_select_first(void)
   clrk_project_t *project;
 
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
-    project->current = project->todo_list;
+    project = clrk_list_elem_data(clerk.current);
+    project->current = project->todo_list->first;
     clrk_draw_todos();
   }
+
+  LOG("END");
 }
 
 static void clrk_todo_running(void)
@@ -451,24 +439,29 @@ static void clrk_todo_running(void)
   clrk_todo_t *todo;
 
   if (clerk.current) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
 
     if (project->current) {
-      todo = clrk_list_data(project->current);
+      todo = clrk_list_elem_data(project->current);
       todo->running = todo->running ? false : true;
       todo->checked = false;
       clrk_draw_todos();
     }
   }
+
   LOG("END");
 }
 
 void clrk_init(void)
 {
   HERE();
-  clerk.project_list        = NULL;
-  clerk.current             = NULL;
-  clerk.number_of_projects  = 0;
+  clerk.current               = NULL;
+  clerk.json                  = NULL;
+  clerk.project_list          = malloc(sizeof(clrk_list_t));
+  assert(clerk.project_list);
+  clerk.project_list->first   = NULL;
+  clerk.project_list->last    = NULL;
+  clerk.project_list->num_of_elems = 0;
 
   if (!clrk_load()) {
     /* Show help screen */
@@ -483,15 +476,15 @@ void clrk_init(void)
       }
     }
   } else if (clerk.current) {
-    clrk_project_t *project = clrk_list_data(clerk.current);
-    project->current = project->todo_list;
+    clrk_project_t *project = clrk_list_elem_data(clerk.current);
+    project->current = project->todo_list->first;
   }
 
   clrk_draw();
   tb_set_cursor(TB_HIDE_CURSOR, TB_HIDE_CURSOR);
 
-  LOG("END");
   tb_present();
+  LOG("END");
 }
 
 void clrk_loop_normal(void)
@@ -625,13 +618,13 @@ void clrk_loop_normal(void)
           case '0':
             LOG(RED"key '0'"NOCOLOR);
             /* Go to the first project */
-            clrk_project_set_current(clerk.project_list);
+            clrk_project_set_current(clerk.project_list->first);
             break;
-            /* case '$': */
-            /*   #<{(| Go to the last project |)}># */
-            /*   LOG(RED"key '$'"NOCOLOR); */
-            /*   clrk_project_set_current(clerk.project_list->prev); */
-            /*   break; */
+            case '$':
+              /* Go to the last project */
+              LOG(RED"key '$'"NOCOLOR);
+              clrk_project_set_current(clerk.project_list->last);
+              break;
         }
       }
 
@@ -653,4 +646,5 @@ void clrk_loop_normal(void)
     }
     tb_present();
   }
+  free(clerk.project_list);
 }

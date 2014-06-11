@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include <yajl/yajl_gen.h>    // gennerate json
 #include <yajl/yajl_parse.h>  // parse json
@@ -37,7 +38,7 @@ void clrk_save(void)
   /* Start with '{' */
   yajl_gen_map_open(g);
 
-  FOR_EACH(project, clerk.project_list) {
+  LIST_FOREACH(project, clerk.project_list) {
     /*
      * Each project is represented as list of tuples.
      * <string> : [ {...}, {...}, ... ]
@@ -47,7 +48,7 @@ void clrk_save(void)
                     strlen(project->name));
     yajl_gen_array_open(g);
 
-    FOR_EACH(todo, project->todo_list) {
+    LIST_FOREACH(todo, project->todo_list) {
       /*
        * Each todo is represented as tuple
        * { CLRK_CONFIG_TEXT : <string>,
@@ -161,7 +162,7 @@ bool clrk_load(void)
   char buffer[CLRK_CONFIG_BUFFER_SIZE], *p;
   yajl_handle parser_handle;
   yajl_status parser_status;
-  clrk_list_t *elem;
+  clrk_list_elem_t *elem;
 
   /* Free existing projects and todos  */
   while (clerk.current) {

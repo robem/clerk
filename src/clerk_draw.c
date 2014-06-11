@@ -65,25 +65,23 @@ void clrk_draw_project_line(void)
   /* Draw number of project in the first field */
 #define NUM_BUF_LEN 4
   char num_buf[NUM_BUF_LEN];
-  length = itoa(&num_buf[NUM_BUF_LEN - 1], clerk.number_of_projects);
+  length = itoa(&num_buf[NUM_BUF_LEN - 1], clerk.project_list->num_of_elems);
   for (i = 0; i < length; ++i) {
     tb_change_cell(i, CLRK_DRAW_PRJ_LINE_Y, num_buf[NUM_BUF_LEN - length + i],
         CLRK_COLOR_PRJ_CURRENT, CLRK_COLOR_PRJ_LINE);
   }
 #undef NUM_BUF_LEN
 
-  if (clerk.project_list) {
+  if (clerk.project_list->num_of_elems > 0) {
     fg = CLRK_COLOR_PRJ_FG;
     bg = CLRK_COLOR_PRJ_BG;
 
-    LOG("before foreach");
     /* Draw project names */
     x = 3;
-    LOG("width-3 %d, cnop %d", width-3, clerk.number_of_projects);
-    space_per_project = (width-3)/clerk.number_of_projects;
+    LOG("width-3 %d, cnop %d", width-3, clerk.project_list->num_of_elems);
+    space_per_project = (width-3)/clerk.project_list->num_of_elems;
 
-    FOR_EACH(project, clerk.project_list) {
-      LOG("proj name %s", project->name);
+    LIST_FOREACH(project, clerk.project_list) {
       length = strlen(project->name);
 
       if (space_per_project < (length + 2)) {
@@ -91,7 +89,6 @@ void clrk_draw_project_line(void)
       }
       spaces = (space_per_project - length) / 2;
 
-      LOG("spaces %d, spp %d, length %d", spaces, space_per_project, length);
       /* Add spaces around the name */
       for (i = 0; i < spaces; ++i) {
         name[i] = ' ';
@@ -104,15 +101,14 @@ void clrk_draw_project_line(void)
       }
       name[(2*spaces) + length] = '\0';
 
-      LOG("#%s#",name);
-
       /* Highlight currently selected project */
-      if (project == clrk_list_data(clerk.current)) {
+      if (project == clrk_list_elem_data(clerk.current)) {
         bg = CLRK_COLOR_PRJ_CURRENT;
       } else {
         bg = CLRK_COLOR_PRJ_BG;
       }
 
+      LOG("draw project '%s'", name);
       clrk_draw_text(x, CLRK_DRAW_PRJ_LINE_Y, name, fg, bg);
       x += space_per_project;
     }
@@ -150,46 +146,39 @@ void clrk_draw_todos(void)
   clrk_draw_todo_clear();
 
   if (clerk.current != NULL) {
-    project = clrk_list_data(clerk.current);
+    project = clrk_list_elem_data(clerk.current);
 
     if (project && project->todo_list) {
-      /* LOG("proj->todo_list %p", project->todo_list); */
-
       unsigned visible_todos = (CLRK_DRAW_STATUS_LINE - CLRK_DRAW_TODO_START_Y) / 3;
-      LOG("visible_todos = %d, project->number_of_todos = %d", visible_todos, project->number_of_todos);
 
       /* Calculate the first todo to draw */
-      clrk_list_t *start = project->todo_list;
-      if (visible_todos < project->number_of_todos) {
+      clrk_list_elem_t *start = project->todo_list->first;
+      if (visible_todos < project->todo_list->num_of_elems) {
         unsigned index = 0;
-        clrk_list_t *e = start;
+        clrk_list_elem_t *e = start;
         clrk_todo_t *t = NULL;
-        clrk_todo_t *active_todo = clrk_list_data(project->current);
-        LOG("before loop");
+        clrk_todo_t *active_todo = clrk_list_elem_data(project->current);
+
         while (e) {
           index++;
-          t = clrk_list_data(e);
+          t = clrk_list_elem_data(e);
           /* Scroll upwards/downwards: common case */
           if (active_todo->visible && t->visible) {
             start = e;
-            LOG("scroll 1: active \"%s\", t \"%s\"", active_todo->message, t->message);
             break;
           }
           /* Scroll upwards: top line is active todo */
           if (t == active_todo && !t->visible && e->next
-              && ((clrk_todo_t*)clrk_list_data(e->next))->visible) {
+              && ((clrk_todo_t*)clrk_list_elem_data(e->next))->visible) {
             start = e;
-            LOG("scroll 2: active \"%s\", t \"%s\"", active_todo->message, t->message);
             break;
           }
           /* Scroll downwards: active_todo not found yet */
           if (index > visible_todos) {
             start = start->next;
-            LOG("scroll: next");
           }
           /* Scroll downwards: bottom line is active_todo && initial draw */
           if (t == active_todo && !t->visible) {
-            LOG("scroll 3: active \"%s\", t \"%s\"", active_todo->message, t->message);
             break;
           }
           e = e->next;
@@ -197,18 +186,18 @@ void clrk_draw_todos(void)
       }
 
       /* Draw todo_list */
-      LOG("eoLoop");
-      clrk_todo_t *start_todo = clrk_list_data(start);
+      clrk_todo_t *start_todo = clrk_list_elem_data(start);
       bool start_seen = false;
       x = CLRK_DRAW_TODO_START_X;
       y = CLRK_DRAW_TODO_START_Y;
-      FOR_EACH(todo, project->todo_list) {
-        LOG("I'M in foreach todo: %s", todo->message);
+      LIST_FOREACH(todo, project->todo_list) {
 
+        /* Check if we reached start of visible todos */
         if (!start_seen && todo == start_todo) {
           start_seen = true;
         }
 
+        /* Set todo's visibility */
         if (start_seen && visible_todos) {
           todo->visible = true;
           visible_todos--;
@@ -226,7 +215,8 @@ void clrk_draw_todos(void)
           clrk_draw_text(x, y, "[ ] ", CLRK_COLOR_CHECKED_FALSE, CLRK_COLOR_TODO_BG);
         }
 
-        if (todo == clrk_list_data(project->current)) {
+        /* Highlight background if todo is selected */
+        if (todo == clrk_list_elem_data(project->current)) {
           clrk_draw_text(x+4, y, todo->message, CLRK_COLOR_TODO_FG, CLRK_COLOR_TODO_CURRENT);
         } else {
           clrk_draw_text(x+4, y, todo->message, CLRK_COLOR_TODO_FG, CLRK_COLOR_TODO_BG);
@@ -324,29 +314,28 @@ void clrk_draw_help(void)
   while (strcmp(help_text[i++], "END OF HELP")) {
     lines++;
   }
-  LOG("Number of helper text lines %d", lines);
 
   if (lines >= height) {
     clrk_draw_status("Window too small to draw help box.");
     return;
   }
+
   /* Draw a box in the bottom of the screen */
   unsigned start_line = (height - 1) - lines;
   unsigned text_height = height - start_line;
   struct tb_cell cells[width * text_height];
 
-  LOG("before defining background cells");
+  /* Craft text box and fill it with background color */
   for (i = 0; i < (width * text_height); ++i) {
     cells[i].ch = ' ';
     cells[i].fg = CLRK_COLOR_INPUT_FG;
     cells[i].bg = CLRK_COLOR_INPUT_BG;
   }
 
-  LOG("before drawing box height: %d, start_line: %d, helpsize: %d", height, start_line, lines);
+  /* Draw text box */
   tb_blit(0, start_line, width, text_height, cells);
 
   /* Draw help text */
-  LOG("before drawing text");
   for (i = 0; i < lines; ++i) {
     clrk_draw_text(1, start_line + i, help_text[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
   }

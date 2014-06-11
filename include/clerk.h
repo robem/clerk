@@ -42,15 +42,13 @@ typedef struct clrk_todo {
 typedef struct clrk_project {
   char name[CLRK_PRJ_NAME_SIZE];
   clrk_list_t *todo_list;
-  clrk_list_t *current;
-  unsigned int number_of_todos;
+  clrk_list_elem_t *current;
 } clrk_project_t;
 
 typedef struct clrk_clerk {
   char *json;
   clrk_list_t *project_list;
-  clrk_list_t *current;
-  unsigned int number_of_projects;
+  clrk_list_elem_t *current;
 } clrk_clerk_t;
 
 /*
@@ -66,7 +64,7 @@ clrk_project_t* clrk_project_add(const char *name);
 /*
  * Set current project pointer
  */
-clrk_list_t* clrk_project_set_current(clrk_list_t *project);
+clrk_list_elem_t* clrk_project_set_current(clrk_list_elem_t *elem);
 
 /*
  * Remove current project

@@ -1,12 +1,12 @@
 #include <clerk_list.h>
 
-static clrk_list_t* clrk_list_new(void* data)
+static clrk_list_elem_t * clrk_list_new(void* data)
 {
   HERE();
-  clrk_list_t *new;
-  new = (clrk_list_t*)malloc(sizeof(clrk_list_t));
+  clrk_list_elem_t *new = malloc(sizeof(clrk_list_elem_t));
   assert(new);
 
+  LOG("new elem "PTR" and new data "PTR, new, data);
   new->data = data;
   new->next = NULL;
   new->prev = NULL;
@@ -14,63 +14,66 @@ static clrk_list_t* clrk_list_new(void* data)
   return new;
 }
 
-void clrk_list_free(clrk_list_t *list)
+void clrk_list_elem_free(clrk_list_elem_t *elem)
 {
   HERE();
-  free(list);
+  free(elem);
 }
 
-clrk_list_t* clrk_list_add(clrk_list_t **list, void *data)
+clrk_list_elem_t * clrk_list_add(clrk_list_t *list, void *data)
 {
   HERE();
-  clrk_list_t *p, *elem;
+  clrk_list_elem_t *elem;
 
-  if (list && *list == NULL) {
-    *list = clrk_list_new(data);
-    return *list;
-  }
-
-  p = *list;
-  while (p->next)
-    p = p->next;
+  assert(list);
 
   elem = clrk_list_new(data);
 
-  p->next = elem;
-  elem->prev = p;
+  if (list->last) {
+     LOG("Add elem to list");
+     list->last->next = elem;
+     elem->prev       = list->last;
+     list->last       = elem;
+  } else {
+     LOG("Add first elem to list");
+     list->first = elem;
+     list->last  = elem;
+  }
 
   return elem;
 }
 
-clrk_list_t* clrk_list_remove(clrk_list_t *elem)
+clrk_list_elem_t* clrk_list_elem_remove(clrk_list_t *list, clrk_list_elem_t *elem)
 {
   HERE();
+  assert(list);
+  assert(elem);
 
-  if (elem && elem->prev) {
+  if (elem->prev) {
     elem->prev->next = elem->next;
   }
-  if (elem && elem->next) {
+
+  if (elem->next) {
     elem->next->prev = elem->prev;
   }
 
+  if (elem == list->first) {
+     list->first = elem->next;
+  }
+
+  if (elem == list->last) {
+     list->last = elem->prev;
+  }
+
+  list->num_of_elems--;
+  assert(list->num_of_elems >= 0);
+
   return elem;
 }
 
-void* clrk_list_data(clrk_list_t *list)
+void* clrk_list_elem_data(clrk_list_elem_t *elem)
 {
   HERE();
-  return list ? list->data : NULL;
-}
-
-clrk_list_t* clrk_list_next(clrk_list_t* list)
-{
-  HERE();
-  return list ? list->next : NULL;
-}
-
-clrk_list_t* clrk_list_prev(clrk_list_t* list)
-{
-  HERE();
-  return list ? list->prev : NULL;
+  return elem ? elem->data : NULL;
 }
 
