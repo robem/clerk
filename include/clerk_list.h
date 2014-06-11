@@ -6,12 +6,10 @@
 
 #include <clerk_log.h>
 
-#define LIST_FOREACH(e, list) \
-  for (elem_ptr = list->first, \
-      e = elem_ptr?clrk_list_elem_data(elem_ptr):NULL;\
-      elem_ptr; \
-      elem_ptr = elem_ptr->next, \
-      e = elem_ptr?clrk_list_elem_data(elem_ptr):NULL)
+#define LIST_FOREACH(elem, list) \
+  for (elem = list->first; \
+       elem != NULL; \
+       elem = elem->next)
 
 typedef struct clrk_list_elem {
   void *data;
@@ -25,7 +23,6 @@ typedef struct clrk_list {
    unsigned num_of_elems;
 } clrk_list_t;
 
-static clrk_list_elem_t *elem_ptr;
 
 void clrk_list_elem_free(clrk_list_elem_t *elem);
 

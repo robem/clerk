@@ -23,6 +23,7 @@ void clrk_save(void)
   FILE *file;
   struct yajl_gen_t *g;
 
+  clrk_list_elem_t *project_elem, *todo_elem;
   clrk_project_t *project;
   clrk_todo_t *todo;
 
@@ -38,7 +39,8 @@ void clrk_save(void)
   /* Start with '{' */
   yajl_gen_map_open(g);
 
-  LIST_FOREACH(project, clerk.project_list) {
+  LIST_FOREACH(project_elem, clerk.project_list) {
+    project = clrk_list_elem_data(project_elem);
     /*
      * Each project is represented as list of tuples.
      * <string> : [ {...}, {...}, ... ]
@@ -48,7 +50,8 @@ void clrk_save(void)
                     strlen(project->name));
     yajl_gen_array_open(g);
 
-    LIST_FOREACH(todo, project->todo_list) {
+    LIST_FOREACH(todo_elem, project->todo_list) {
+      todo = clrk_list_elem_data(todo_elem);
       /*
        * Each todo is represented as tuple
        * { CLRK_CONFIG_TEXT : <string>,

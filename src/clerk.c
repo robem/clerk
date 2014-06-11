@@ -201,10 +201,6 @@ void clrk_project_remove_current(void)
 
   project = clrk_list_elem_data(clerk.current);
 
-  clrk_project_t *p;
-  LIST_FOREACH(p, clerk.project_list) {
-    LOG("\t"PTR" %s", p, p->name);
-  }
   /* Remove from project list */
   clrk_list_elem_remove(clerk.project_list, clerk.current);
 
@@ -226,9 +222,6 @@ void clrk_project_remove_current(void)
   /* Set new current project element */
   clerk.current = clerk.project_list->first;
 
-  LIST_FOREACH(p, clerk.project_list) {
-    LOG("\t"PTR" %s", p, p->name);
-  }
   LOG("END");
 }
 

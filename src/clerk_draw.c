@@ -53,6 +53,7 @@ void clrk_draw_project_line(void)
 {
   HERE();
   char name[tb_width()];
+  clrk_list_elem_t *project_elem;
   clrk_project_t *project;
   int i, x, length, width, space_per_project, spaces;
   int fg, bg;
@@ -81,7 +82,8 @@ void clrk_draw_project_line(void)
     LOG("width-3 %d, cnop %d", width-3, clerk.project_list->num_of_elems);
     space_per_project = (width-3)/clerk.project_list->num_of_elems;
 
-    LIST_FOREACH(project, clerk.project_list) {
+    LIST_FOREACH(project_elem, clerk.project_list) {
+      project = clrk_list_elem_data(project_elem);
       length = strlen(project->name);
 
       if (space_per_project < (length + 2)) {
@@ -140,6 +142,7 @@ void clrk_draw_todos(void)
 {
   HERE();
   unsigned x, y;
+  clrk_list_elem_t *todo_elem;
   clrk_todo_t *todo;
   clrk_project_t *project;
 
@@ -190,7 +193,8 @@ void clrk_draw_todos(void)
       bool start_seen = false;
       x = CLRK_DRAW_TODO_START_X;
       y = CLRK_DRAW_TODO_START_Y;
-      LIST_FOREACH(todo, project->todo_list) {
+      LIST_FOREACH(todo_elem, project->todo_list) {
+        todo = clrk_list_elem_data(todo_elem);
 
         /* Check if we reached start of visible todos */
         if (!start_seen && todo == start_todo) {
