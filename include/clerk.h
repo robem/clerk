@@ -28,15 +28,16 @@
 #define CLRK_TODO_MESSAGE_SIZE   100
 #define CLRK_INPUT_BUFFER_SIZE  1000
 
-enum {
-  CLRK_OK,
-};
+typedef enum todo_state{
+  UNCHECKED,
+  CHECKED,
+  RUNNING,
+  INFO
+} todo_state_t;
 
 typedef struct clrk_todo {
   char message[CLRK_TODO_MESSAGE_SIZE];
-  bool checked;
-  bool running;
-  bool info;
+  todo_state_t state;
   bool visible;
 } clrk_todo_t;
 

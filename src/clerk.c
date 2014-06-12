@@ -256,9 +256,7 @@ static clrk_todo_t * clrk_todo_new(const char *text)
   assert(todo);
 
   strncpy(todo->message, text, CLRK_TODO_MESSAGE_SIZE);
-  todo->checked = false;
-  todo->running = false;
-  todo->info    = false;
+  todo->state = UNCHECKED;
   todo->visible = false;
 
   LOG("Add new todo: %s", text);
@@ -436,9 +434,7 @@ void clrk_todo_tick_off(void)
 
     if (project->current) {
       todo = clrk_list_elem_data(project->current);
-      todo->checked = todo->checked ? false : true;
-      todo->running = false;
-      todo->info    = false;
+      todo->state = (todo->state == CHECKED)?UNCHECKED:CHECKED;
       clrk_draw_todos();
     }
   }
@@ -486,9 +482,7 @@ static void clrk_todo_info(void)
 
     if (project->current) {
       todo = clrk_list_elem_data(project->current);
-      todo->info = todo->info ? false : true;
-      todo->checked = false;
-      todo->running = false;
+      todo->state = (todo->state == INFO)?UNCHECKED:INFO;
       clrk_draw_todos();
     }
   }
@@ -506,9 +500,7 @@ static void clrk_todo_running(void)
 
     if (project->current) {
       todo = clrk_list_elem_data(project->current);
-      todo->running = todo->running ? false : true;
-      todo->checked = false;
-      todo->info    = false;
+      todo->state = (todo->state == RUNNING)?UNCHECKED:RUNNING;
       clrk_draw_todos();
     }
   }

@@ -264,14 +264,18 @@ void clrk_draw_todos(void)
         }
 
         /* Make checkbox red or green */
-        if (todo->running) {
-          clrk_draw_text(x, y, "[*] ", CLRK_COLOR_RUNNING_TRUE, CLRK_COLOR_TODO_BG);
-        } else if (todo->info) {
-          clrk_draw_text(x, y, "[i] ", CLRK_COLOR_INFO_TRUE, CLRK_COLOR_TODO_BG);
-        } else if (todo->checked) {
-          clrk_draw_text(x, y, "[X] ", CLRK_COLOR_CHECKED_TRUE, CLRK_COLOR_TODO_BG);
-        } else {
-          clrk_draw_text(x, y, "[ ] ", CLRK_COLOR_CHECKED_FALSE, CLRK_COLOR_TODO_BG);
+        switch (todo->state) {
+           case RUNNING:
+              clrk_draw_text(x, y, "[*] ", CLRK_COLOR_RUNNING_TRUE, CLRK_COLOR_TODO_BG);
+              break;
+           case INFO:
+              clrk_draw_text(x, y, "[i] ", CLRK_COLOR_INFO_TRUE, CLRK_COLOR_TODO_BG);
+              break;
+           case CHECKED:
+              clrk_draw_text(x, y, "[X] ", CLRK_COLOR_CHECKED_TRUE, CLRK_COLOR_TODO_BG);
+              break;
+           default:
+              clrk_draw_text(x, y, "[ ] ", CLRK_COLOR_CHECKED_FALSE, CLRK_COLOR_TODO_BG);
         }
 
         /* Highlight background if todo is selected */

@@ -68,7 +68,7 @@ void clrk_save(void)
       /* X */
       yajl_gen_string(g, (const unsigned char*)CLRK_CONFIG_X, \
                       strlen(CLRK_CONFIG_X));
-      yajl_gen_bool(g, todo->checked);
+      yajl_gen_bool(g, todo->state == CHECKED);
 
       yajl_gen_map_close(g);
     }
