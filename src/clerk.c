@@ -391,7 +391,7 @@ static void clrk_todo_remove_current(void)
   }
 }
 
-static clrk_list_elem_t * clrk_todo_next(void) {
+static clrk_list_elem_t * clrk_todo_select_next(void) {
   HERE();
   clrk_project_t *project;
 
@@ -407,7 +407,7 @@ static clrk_list_elem_t * clrk_todo_next(void) {
   return project->current;
 }
 
-static clrk_list_elem_t * clrk_todo_prev(void)
+static clrk_list_elem_t * clrk_todo_select_prev(void)
 {
   HERE();
   clrk_project_t *project;
@@ -416,6 +416,44 @@ static clrk_list_elem_t * clrk_todo_prev(void)
     project = clrk_list_elem_data(clerk.current);
     if (project && project->current && project->current->prev) {
       project->current = project->current->prev;
+      clrk_draw_todos();
+    }
+  }
+
+  return project->current;
+}
+
+static clrk_list_elem_t * clrk_todo_move_up(void)
+{
+  HERE();
+  clrk_project_t *project;
+
+  if (clerk.current) {
+    project = clrk_list_elem_data(clerk.current);
+    if (project->current->prev) {
+      clrk_list_elem_t *helper = project->current->prev;
+      clrk_list_elem_remove(project->todo_list, project->current);
+      clrk_list_elem_insert_before(project->todo_list, project->current, helper);
+
+      clrk_draw_todos();
+    }
+  }
+
+  return project->current;
+}
+
+static clrk_list_elem_t * clrk_todo_move_down(void)
+{
+  HERE();
+  clrk_project_t *project;
+
+  if (clerk.current) {
+    project = clrk_list_elem_data(clerk.current);
+    if (project->current->next) {
+      clrk_list_elem_t *helper = project->current->next;
+      clrk_list_elem_remove(project->todo_list, project->current);
+      clrk_list_elem_insert_after(project->todo_list, helper, project->current);
+
       clrk_draw_todos();
     }
   }
@@ -576,14 +614,14 @@ void clrk_loop_normal(void)
           || event.ch == 'j') {
         LOG(RED"key 'j' or arrow down"NOCOLOR);
         if (clerk.current) {
-          clrk_todo_next();
+          clrk_todo_select_next();
         }
       /* Go up */
       } else if (event.key == TB_KEY_ARROW_UP
           || event.ch == 'k') {
         LOG(RED"key 'k' or arrow up"NOCOLOR);
         if (clerk.current) {
-          clrk_todo_prev();
+          clrk_todo_select_prev();
         }
       } else {
         switch (event.ch) {
@@ -614,6 +652,16 @@ void clrk_loop_normal(void)
             /* Mark as todo as info */
             LOG(RED"key 'i'"NOCOLOR);
             clrk_todo_info();
+            break;
+          case 'J':
+            /* Move current todo down */
+            LOG(RED"key 'J'"NOCOLOR);
+            clrk_todo_move_down();
+            break;
+          case 'K':
+            /* Move current todo down */
+            LOG(RED"key 'K'"NOCOLOR);
+            clrk_todo_move_up();
             break;
           case 'L':
             LOG(RED"key 'L'"NOCOLOR);

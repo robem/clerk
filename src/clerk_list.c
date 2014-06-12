@@ -43,6 +43,42 @@ clrk_list_elem_t * clrk_list_add(clrk_list_t *list, void *data)
   return elem;
 }
 
+clrk_list_elem_t * clrk_list_elem_insert_after(clrk_list_t *list, clrk_list_elem_t *after, clrk_list_elem_t *move)
+{
+  HERE();
+  assert(move);
+  assert(after);
+
+  if (after->next) {
+    after->next->prev = move;
+  } else {
+    list->last = move;
+  }
+  move->next = after->next;
+  move->prev = after;
+  after->next = move;
+
+  return move;
+}
+
+clrk_list_elem_t * clrk_list_elem_insert_before(clrk_list_t *list, clrk_list_elem_t *move, clrk_list_elem_t *before)
+{
+  HERE();
+  assert(move);
+  assert(before);
+
+  if (before->prev) {
+    before->prev->next = move;
+  } else {
+    list->first = move;
+  }
+  move->prev = before->prev;
+  move->next = before;
+  before->prev = move;
+
+  return move;
+}
+
 clrk_list_elem_t* clrk_list_elem_remove(clrk_list_t *list, clrk_list_elem_t *elem)
 {
   HERE();
