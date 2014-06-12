@@ -21,5 +21,5 @@ env.Program('clerk',
             src/clerk_json.c
             '''.split(),
             LIBS = ['termbox', 'yajl_s'],
-            parse_flags = "-g -DDEBUG"
+            # parse_flags = "-g -DDEBUG"
            )

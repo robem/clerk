@@ -218,7 +218,7 @@ void clrk_project_remove_current(void)
     do {
        e = e->next;
        project = clrk_list_elem_data(e);
-    } while (project->visible);
+    } while (project->visible && e->next);
     project->visible = true;
   }
 
@@ -360,15 +360,15 @@ static void clrk_todo_remove_current(void)
             }
          }
          if (e != project->todo_list->first) {
-            project = clrk_list_elem_data(e->prev);
-            project->visible = true;
+            todo = clrk_list_elem_data(e->prev);
+            todo->visible = true;
          }
       } else if (e != project->todo_list->first) {
          /* Move visible 'window' by 1 to the rigth otherwise */
          do {
             e = e->next;
             todo = clrk_list_elem_data(e);
-         } while (todo->visible);
+         } while (todo->visible && e->next);
          todo->visible = true;
       }
 
