@@ -204,7 +204,7 @@ void clrk_draw_todos(void)
   if (clerk.current != NULL) {
     project = clrk_list_elem_data(clerk.current);
 
-    if (project && project->todo_list) {
+    if (project && project->todo_list->num_of_elems > 0) {
       unsigned visible_todos = (CLRK_DRAW_STATUS_LINE - CLRK_DRAW_TODO_START_Y) / 3;
 
       /* Calculate the first todo to draw */
@@ -407,7 +407,9 @@ void clrk_draw_help(void)
 }
 
 void clrk_draw(void) {
+  HERE();
   clrk_draw_project_line();
   clrk_draw_todos();
+  LOG("END");
 }
 

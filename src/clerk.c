@@ -141,7 +141,6 @@ clrk_project_t * clrk_project_add(const char *name)
 
   elem = clrk_list_add(clerk.project_list, project);
   clerk.current = elem;
-  clerk.project_list->num_of_elems++;
 
   clrk_draw();
 
@@ -160,6 +159,36 @@ clrk_list_elem_t * clrk_project_set_current(clrk_list_elem_t *elem)
 
   LOG("END");
   return elem;
+}
+
+static void clrk_project_move_right(void)
+{
+   HERE();
+
+   if (clerk.current && clerk.current->next) {
+      clrk_list_elem_t *helper = clerk.current->next;
+      clrk_list_elem_remove(clerk.project_list, clerk.current);
+      clrk_list_elem_insert_after(clerk.project_list, helper, clerk.current);
+
+      clrk_draw_project_line();
+   }
+
+   LOG("END");
+}
+
+static void clrk_project_move_left(void)
+{
+   HERE();
+
+   if (clerk.current && clerk.current->prev) {
+      clrk_list_elem_t *helper = clerk.current->prev;
+      clrk_list_elem_remove(clerk.project_list, clerk.current);
+      clrk_list_elem_insert_before(clerk.project_list, clerk.current, helper);
+
+      clrk_draw_project_line();
+   }
+
+   LOG("END");
 }
 
 static void clrk_project_edit_current(void)
@@ -299,7 +328,6 @@ clrk_todo_t * clrk_todo_add(const char *text)
   assert(elem);
 
   project->current = elem;
-  project->todo_list->num_of_elems++;
   clrk_draw_todos();
 
   LOG("END");
@@ -373,9 +401,6 @@ static void clrk_todo_remove_current(void)
       clrk_list_elem_t *helper = project->current->prev?project->current->prev:project->current->next;
       clrk_list_elem_remove(project->todo_list, project->current);
       clrk_list_elem_free(project->current);
-
-      project->todo_list->num_of_elems--;
-      assert(project->todo_list->num_of_elems >= 0);
 
       if (project->current == project->todo_list->first) {
         project->todo_list->first = NULL;
@@ -648,6 +673,11 @@ void clrk_loop_normal(void)
             LOG(RED"key 'G'"NOCOLOR);
             clrk_todo_select_last();
             break;
+          case 'H':
+            /* Move current project left */
+            LOG(RED"key 'K'"NOCOLOR);
+            clrk_project_move_left();
+            break;
           case 'i':
             /* Mark as todo as info */
             LOG(RED"key 'i'"NOCOLOR);
@@ -664,14 +694,9 @@ void clrk_loop_normal(void)
             clrk_todo_move_up();
             break;
           case 'L':
-            LOG(RED"key 'L'"NOCOLOR);
-            /* Load json file */
-            if (clrk_load()) {
-              clrk_draw();
-              clrk_draw_status("loaded json");
-            } else {
-              clrk_draw_status("cannot find json");
-            }
+            /* Move current project right */
+            LOG(RED"key 'K'"NOCOLOR);
+            clrk_project_move_right();
             break;
           case 'p':
             /* Add new project */
@@ -691,6 +716,16 @@ void clrk_loop_normal(void)
             /* Mark current todo as 'running'/'next' */
             LOG(RED"key 'r'"NOCOLOR);
             clrk_todo_running();
+            break;
+          case 'R':
+            LOG(RED"key 'R'"NOCOLOR);
+            /* Load json file */
+            if (clrk_load()) {
+              clrk_draw();
+              clrk_draw_status("loaded json");
+            } else {
+              clrk_draw_status("cannot find json");
+            }
             break;
           case 'S':
             LOG(RED"key 'S'"NOCOLOR);

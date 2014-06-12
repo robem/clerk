@@ -1,6 +1,6 @@
 #include <clerk_list.h>
 
-static clrk_list_elem_t * clrk_list_new(void* data)
+static clrk_list_elem_t * clrk_list_elem_new(void* data)
 {
   HERE();
   clrk_list_elem_t *new = malloc(sizeof(clrk_list_elem_t));
@@ -23,11 +23,9 @@ void clrk_list_elem_free(clrk_list_elem_t *elem)
 clrk_list_elem_t * clrk_list_add(clrk_list_t *list, void *data)
 {
   HERE();
-  clrk_list_elem_t *elem;
-
   assert(list);
 
-  elem = clrk_list_new(data);
+  clrk_list_elem_t *elem = clrk_list_elem_new(data);
 
   if (list->last) {
      LOG("Add elem to list");
@@ -40,14 +38,19 @@ clrk_list_elem_t * clrk_list_add(clrk_list_t *list, void *data)
      list->last  = elem;
   }
 
+  list->num_of_elems++;
+
   return elem;
 }
 
 clrk_list_elem_t * clrk_list_elem_insert_after(clrk_list_t *list, clrk_list_elem_t *after, clrk_list_elem_t *move)
 {
   HERE();
+  assert(list);
   assert(move);
   assert(after);
+
+  /* TODO: after needs to be in list */
 
   if (after->next) {
     after->next->prev = move;
@@ -58,14 +61,19 @@ clrk_list_elem_t * clrk_list_elem_insert_after(clrk_list_t *list, clrk_list_elem
   move->prev = after;
   after->next = move;
 
+  list->num_of_elems++;
+
   return move;
 }
 
 clrk_list_elem_t * clrk_list_elem_insert_before(clrk_list_t *list, clrk_list_elem_t *move, clrk_list_elem_t *before)
 {
   HERE();
+  assert(list);
   assert(move);
   assert(before);
+
+  /* TODO: before needs to be in list */
 
   if (before->prev) {
     before->prev->next = move;
@@ -76,10 +84,12 @@ clrk_list_elem_t * clrk_list_elem_insert_before(clrk_list_t *list, clrk_list_ele
   move->next = before;
   before->prev = move;
 
+  list->num_of_elems++;
+
   return move;
 }
 
-clrk_list_elem_t* clrk_list_elem_remove(clrk_list_t *list, clrk_list_elem_t *elem)
+clrk_list_elem_t * clrk_list_elem_remove(clrk_list_t *list, clrk_list_elem_t *elem)
 {
   HERE();
   assert(list);
@@ -107,9 +117,10 @@ clrk_list_elem_t* clrk_list_elem_remove(clrk_list_t *list, clrk_list_elem_t *ele
   return elem;
 }
 
-void* clrk_list_elem_data(clrk_list_elem_t *elem)
+void * clrk_list_elem_data(clrk_list_elem_t *elem)
 {
   HERE();
-  return elem ? elem->data : NULL;
+  assert(elem);
+  return elem->data;
 }
 
