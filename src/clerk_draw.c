@@ -79,16 +79,69 @@ void clrk_draw_project_line(void)
 
     /* Draw project names */
     x = 3;
-    LOG("width-3 %d, cnop %d", width-3, clerk.project_list->num_of_elems);
+    LOG("width-3 %d, number of projects %d", width-3, clerk.project_list->num_of_elems);
     space_per_project = (width-3)/clerk.project_list->num_of_elems;
+    if (space_per_project < CLRK_PRJ_NAME_SIZE+2) {
+       /* Set minimum space per project name */
+       space_per_project = CLRK_PRJ_NAME_SIZE+2;
+    }
 
+    unsigned visible_projects = (width-3)/space_per_project;
+    unsigned index = 0;
+
+    clrk_list_elem_t *start = clerk.project_list->first;
+    if (visible_projects < clerk.project_list->num_of_elems) {
+       clrk_list_elem_t *elem = clerk.project_list->first;
+       clrk_project_t *active_project = clrk_list_elem_data(clerk.current);
+       clrk_project_t *p;
+
+       while(elem) {
+          index++;
+          p = clrk_list_elem_data(elem);
+          /* Scroll right/left: common case */
+          if (active_project->visible && p->visible) {
+            start = elem;
+            break;
+          }
+          /* Scroll left: most left column is active project */
+          if (p == active_project && !p->visible && elem->next
+              && ((clrk_project_t*)clrk_list_elem_data(elem->next))->visible) {
+            start = elem;
+            break;
+          }
+          /* Scroll right: active_project not found yet */
+          if (index > visible_projects) {
+            start = start->next;
+          }
+          /* Scroll right: bottom line is active_todo && initial draw */
+          if (p == active_project && !p->visible) {
+            break;
+          }
+          elem = elem->next;
+       }
+    }
+
+    clrk_project_t *start_project = clrk_list_elem_data(start);
+    bool start_seen = false;
     LIST_FOREACH(project_elem, clerk.project_list) {
       project = clrk_list_elem_data(project_elem);
       length = strlen(project->name);
 
-      if (space_per_project < (length + 2)) {
-        space_per_project = length + 2;
+      /* Check if we reached start of visible todos */
+      if (!start_seen && project == start_project) {
+         start_seen = true;
       }
+
+      /* Set todo's visibility */
+      if (start_seen && visible_projects) {
+         project->visible = true;
+         visible_projects--;
+      } else {
+         project->visible = false;
+         continue;
+      }
+
+      /* Calculate number of framing spaces */
       spaces = (space_per_project - length) / 2;
 
       /* Add spaces around the name */
@@ -213,6 +266,8 @@ void clrk_draw_todos(void)
         /* Make checkbox red or green */
         if (todo->running) {
           clrk_draw_text(x, y, "[*] ", CLRK_COLOR_RUNNING_TRUE, CLRK_COLOR_TODO_BG);
+        } else if (todo->info) {
+          clrk_draw_text(x, y, "[i] ", CLRK_COLOR_INFO_TRUE, CLRK_COLOR_TODO_BG);
         } else if (todo->checked) {
           clrk_draw_text(x, y, "[X] ", CLRK_COLOR_CHECKED_TRUE, CLRK_COLOR_TODO_BG);
         } else {

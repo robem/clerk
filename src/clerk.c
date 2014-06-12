@@ -113,6 +113,8 @@ static clrk_project_t * clrk_project_new(const char *name)
   project->todo_list->last         = NULL;
   project->todo_list->num_of_elems = 0;
 
+  project->visible = false;
+
   LOG("new project: %s "PTR, project->name, project);
   LOG("END");
   return project;
@@ -191,7 +193,6 @@ void clrk_project_remove_current(void)
 {
   HERE();
   int i;
-  clrk_list_elem_t *destroy_me;
   clrk_project_t *project;
 
   if (clerk.project_list == NULL || clerk.current == NULL) {
@@ -199,12 +200,33 @@ void clrk_project_remove_current(void)
     return;
   }
 
-  project = clrk_list_elem_data(clerk.current);
+  clrk_list_elem_t *e = clerk.current;
+  if (e == clerk.project_list->last && e != clerk.project_list->first) {
+    /* Move visible 'window' by 1 to the left if elem was last */
+    LIST_FOREACH(e, clerk.project_list) {
+       project = clrk_list_elem_data(e);
+       if (project->visible) {
+          break;
+       }
+    }
+    if (e != clerk.project_list->first) {
+       project = clrk_list_elem_data(e->prev);
+       project->visible = true;
+    }
+  } else if (e != clerk.project_list->first) {
+    /* Move visible 'window' by 1 to the rigth otherwise */
+    do {
+       e = e->next;
+       project = clrk_list_elem_data(e);
+    } while (project->visible);
+    project->visible = true;
+  }
 
   /* Remove from project list */
   clrk_list_elem_remove(clerk.project_list, clerk.current);
 
   /* Remove the whole project's todo list */
+  project = clrk_list_elem_data(clerk.current);
   clrk_list_elem_t *helper_elem;
   clrk_list_elem_t *todo_elem = project->todo_list->first;
   while (todo_elem) {
@@ -217,11 +239,13 @@ void clrk_project_remove_current(void)
   free(project->todo_list);
 
   /* Destroy element */
+  helper_elem = clerk.current->prev?clerk.current->prev:clerk.current->next;
   clrk_list_elem_free(clerk.current);
 
   /* Set new current project element */
-  clerk.current = clerk.project_list->first;
+  clerk.current = helper_elem;
 
+  /* Force re-calculation of visible projects */
   LOG("END");
 }
 
@@ -234,6 +258,7 @@ static clrk_todo_t * clrk_todo_new(const char *text)
   strncpy(todo->message, text, CLRK_TODO_MESSAGE_SIZE);
   todo->checked = false;
   todo->running = false;
+  todo->info    = false;
   todo->visible = false;
 
   LOG("Add new todo: %s", text);
@@ -320,15 +345,39 @@ static void clrk_todo_remove_current(void)
 {
   HERE();
   clrk_project_t *project;
+  clrk_todo_t *todo;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
-
     if (project->current) {
+      clrk_list_elem_t *e = project->current;
+      if (e == project->todo_list->last && e != project->todo_list->first) {
+         /* Move visible 'window' by 1 to the left if elem was last */
+         LIST_FOREACH(e, project->todo_list) {
+            todo = clrk_list_elem_data(e);
+            if (todo->visible) {
+               break;
+            }
+         }
+         if (e != project->todo_list->first) {
+            project = clrk_list_elem_data(e->prev);
+            project->visible = true;
+         }
+      } else if (e != project->todo_list->first) {
+         /* Move visible 'window' by 1 to the rigth otherwise */
+         do {
+            e = e->next;
+            todo = clrk_list_elem_data(e);
+         } while (todo->visible);
+         todo->visible = true;
+      }
+
+      clrk_list_elem_t *helper = project->current->prev?project->current->prev:project->current->next;
       clrk_list_elem_remove(project->todo_list, project->current);
       clrk_list_elem_free(project->current);
 
       project->todo_list->num_of_elems--;
+      assert(project->todo_list->num_of_elems >= 0);
 
       if (project->current == project->todo_list->first) {
         project->todo_list->first = NULL;
@@ -336,7 +385,7 @@ static void clrk_todo_remove_current(void)
           project->todo_list->first = project->current->next;
         }
       }
-      project->current = project->todo_list->first;
+      project->current = helper;
 
       LOG("END");
       clrk_draw_todos();
@@ -389,6 +438,7 @@ void clrk_todo_tick_off(void)
       todo = clrk_list_elem_data(project->current);
       todo->checked = todo->checked ? false : true;
       todo->running = false;
+      todo->info    = false;
       clrk_draw_todos();
     }
   }
@@ -425,6 +475,26 @@ static void clrk_todo_select_first(void)
   LOG("END");
 }
 
+static void clrk_todo_info(void)
+{
+  HERE();
+  clrk_project_t *project;
+  clrk_todo_t *todo;
+
+  if (clerk.current) {
+    project = clrk_list_elem_data(clerk.current);
+
+    if (project->current) {
+      todo = clrk_list_elem_data(project->current);
+      todo->info = todo->info ? false : true;
+      todo->checked = false;
+      todo->running = false;
+      clrk_draw_todos();
+    }
+  }
+  LOG("END");
+}
+
 static void clrk_todo_running(void)
 {
   HERE();
@@ -438,6 +508,7 @@ static void clrk_todo_running(void)
       todo = clrk_list_elem_data(project->current);
       todo->running = todo->running ? false : true;
       todo->checked = false;
+      todo->info    = false;
       clrk_draw_todos();
     }
   }
@@ -468,7 +539,10 @@ void clrk_init(void)
         break;
       }
     }
-  } else if (clerk.current) {
+  }
+
+  if (clerk.project_list->first) {
+    clerk.current = clerk.project_list->first;
     clrk_project_t *project = clrk_list_elem_data(clerk.current);
     project->current = project->todo_list->first;
   }
@@ -543,6 +617,11 @@ void clrk_loop_normal(void)
             /* Select last todo */
             LOG(RED"key 'G'"NOCOLOR);
             clrk_todo_select_last();
+            break;
+          case 'i':
+            /* Mark as todo as info */
+            LOG(RED"key 'i'"NOCOLOR);
+            clrk_todo_info();
             break;
           case 'L':
             LOG(RED"key 'L'"NOCOLOR);
