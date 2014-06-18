@@ -28,7 +28,7 @@
 #define CLRK_TODO_MESSAGE_SIZE   100
 #define CLRK_INPUT_BUFFER_SIZE  1000
 
-typedef enum todo_state{
+typedef enum todo_state {
   UNCHECKED,
   CHECKED,
   RUNNING,

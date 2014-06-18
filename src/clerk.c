@@ -582,6 +582,8 @@ void clrk_init(void)
   clerk.project_list->last    = NULL;
   clerk.project_list->num_of_elems = 0;
 
+  clrk_draw_init();
+
   if (!clrk_load()) {
     /* Show help screen */
     clrk_draw_help();

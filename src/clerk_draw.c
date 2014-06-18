@@ -263,20 +263,10 @@ void clrk_draw_todos(void)
           continue;
         }
 
-        /* Make checkbox red or green */
-        switch (todo->state) {
-           case RUNNING:
-              clrk_draw_text(x, y, "[*] ", CLRK_COLOR_RUNNING_TRUE, CLRK_COLOR_TODO_BG);
-              break;
-           case INFO:
-              clrk_draw_text(x, y, "[i] ", CLRK_COLOR_INFO_TRUE, CLRK_COLOR_TODO_BG);
-              break;
-           case CHECKED:
-              clrk_draw_text(x, y, "[X] ", CLRK_COLOR_CHECKED_TRUE, CLRK_COLOR_TODO_BG);
-              break;
-           default:
-              clrk_draw_text(x, y, "[ ] ", CLRK_COLOR_CHECKED_FALSE, CLRK_COLOR_TODO_BG);
-        }
+        /* Draw checkbox */
+        char todo_state[] = "[ ] ";
+        todo_state[1] = state_description[todo->state].c;
+        clrk_draw_text(x, y, todo_state, state_description[todo->state].color, CLRK_COLOR_TODO_BG);
 
         /* Highlight background if todo is selected */
         if (todo == clrk_list_elem_data(project->current)) {
@@ -419,7 +409,24 @@ void clrk_draw_help(void)
   LOG("END");
 }
 
-void clrk_draw(void) {
+void clrk_draw_init(void)
+{
+  HERE();
+
+  state_description[UNCHECKED].c     = ' ';
+  state_description[UNCHECKED].color = CLRK_COLOR_CHECKED_FALSE;
+  state_description[CHECKED].c       = 'X';
+  state_description[CHECKED].color   = CLRK_COLOR_CHECKED_TRUE;
+  state_description[RUNNING].c       = '*';
+  state_description[RUNNING].color   = CLRK_COLOR_RUNNING_TRUE;
+  state_description[INFO].c          = 'i';
+  state_description[INFO].color      = CLRK_COLOR_INFO_TRUE;
+
+  LOG("END");
+}
+
+void clrk_draw(void)
+{
   HERE();
   clrk_draw_project_line();
   clrk_draw_todos();

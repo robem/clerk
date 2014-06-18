@@ -10,6 +10,8 @@
 #define CLRK_DRAW_BOX_WIDTH  100
 #define CLRK_DRAW_BOX_HEIGHT 10
 
+#define CLRK_DRAW_NUM_TODO_STATES 10
+
 // Colors
 #define CLRK_COLOR_PRJ_LINE       17
 #define CLRK_COLOR_PRJ_BG         17
@@ -29,6 +31,13 @@
 
 #define CLRK_COLOR_INPUT_FG  15
 #define CLRK_COLOR_INPUT_BG 235
+
+struct state_descriptor {
+  char c;
+  unsigned color;
+};
+
+struct state_descriptor state_description[CLRK_DRAW_NUM_TODO_STATES];
 
 /*
  * Draw text from left to right starting from position(x, y).
@@ -71,6 +80,11 @@ void clrk_draw_status(const char *status);
  * Draw help text
  */
 void clrk_draw_help(void);
+
+/*
+ * Initialize todo states
+ */
+void clrk_draw_init(void);
 
 /*
  * Draw projects and todos
