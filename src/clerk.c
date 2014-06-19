@@ -44,7 +44,9 @@ static void clrk_input(char *text, char *buffer)
           if (tail) {
             LOG("copy tail [%zu]", tail);
             /* Shift tail by 1 to the left */
-            strcpy(&buffer[i-1], &buffer[i]);
+            char *helper = strdup(&buffer[i]);
+            memcpy(&buffer[i-1], helper, strlen(helper));
+            free(helper);
             /* Paint over last character */
             buffer[i+tail-1] = ' ';
             clrk_draw_text(cx - 1, cy, &buffer[i-1], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
@@ -66,7 +68,9 @@ static void clrk_input(char *text, char *buffer)
             buffer[i] = space ? ' ' : event.ch;
           } else {
             // Add character in between
-            strcpy(&buffer[i+1], &buffer[i]);
+            char *helper = strdup(&buffer[i]);
+            memcpy(&buffer[i+1], helper, strlen(helper));
+            free(helper);
             buffer[i] = space ? ' ' : event.ch;
             clrk_draw_text(cx, cy, &buffer[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
           }
