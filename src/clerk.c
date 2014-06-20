@@ -538,7 +538,7 @@ static void clrk_todo_select_first(void)
   LOG("END");
 }
 
-static void clrk_todo_info(void)
+void clrk_todo_info(void)
 {
   HERE();
   clrk_project_t *project;
@@ -556,7 +556,7 @@ static void clrk_todo_info(void)
   LOG("END");
 }
 
-static void clrk_todo_running(void)
+void clrk_todo_running(void)
 {
   HERE();
   clrk_project_t *project;

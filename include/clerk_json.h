@@ -9,8 +9,6 @@
  */
 typedef struct clrk_config_tracker {
   bool in_todo;
-  bool marked;
-  bool text;
 } clrk_config_tracker_t;
 
 /*

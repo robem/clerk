@@ -17,7 +17,7 @@
 #define CLRK_MIN_WIDTH  20
 
 #define CLRK_CONFIG_FILE "clerk.json"
-#define CLRK_CONFIG_X    "marked"
+#define CLRK_CONFIG_X    "state"
 #define CLRK_CONFIG_TEXT "text"
 
 #define CLRK_NUM_PRJ  20
@@ -80,9 +80,19 @@ void clrk_project_remove_current(void);
 clrk_todo_t* clrk_todo_add(const char *name);
 
 /*
- * Set/Unset X in current todo
+ * Set/Unset 'X' in current todo
  */
 void clrk_todo_tick_off(void);
+
+/*
+ * Set/Unset '*' in current todo
+ */
+void clrk_todo_running(void);
+
+/*
+ * Set/Unset 'i' in current todo
+ */
+void clrk_todo_info(void);
 
 /*
  * Start Clerk.
