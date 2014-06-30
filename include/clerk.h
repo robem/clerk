@@ -57,7 +57,7 @@ typedef struct clrk_clerk {
 /*
  * Initialize Clerk with default values and draws user interface.
  */
-void clrk_init(const char *config);
+void clrk_init(const char *json);
 
 /*
  * Create/add a new project
