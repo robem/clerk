@@ -575,11 +575,11 @@ void clrk_todo_running(void)
   LOG("END");
 }
 
-void clrk_init(void)
+void clrk_init(const char *json)
 {
   HERE();
   clerk.current               = NULL;
-  clerk.json                  = NULL;
+  clerk.json                  = json;
   clerk.project_list          = malloc(sizeof(clrk_list_t));
   assert(clerk.project_list);
   clerk.project_list->first   = NULL;
