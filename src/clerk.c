@@ -44,7 +44,9 @@ static void clrk_input(char *text, char *buffer)
           if (tail) {
             LOG("copy tail [%zu]", tail);
             /* Shift tail by 1 to the left */
-            strcpy(&buffer[i-1], &buffer[i]);
+            char *helper = strdup(&buffer[i]);
+            memcpy(&buffer[i-1], helper, strlen(helper));
+            free(helper);
             /* Paint over last character */
             buffer[i+tail-1] = ' ';
             clrk_draw_text(cx - 1, cy, &buffer[i-1], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
@@ -66,7 +68,9 @@ static void clrk_input(char *text, char *buffer)
             buffer[i] = space ? ' ' : event.ch;
           } else {
             // Add character in between
-            strcpy(&buffer[i+1], &buffer[i]);
+            char *helper = strdup(&buffer[i]);
+            memcpy(&buffer[i+1], helper, strlen(helper));
+            free(helper);
             buffer[i] = space ? ' ' : event.ch;
             clrk_draw_text(cx, cy, &buffer[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
           }
@@ -534,7 +538,7 @@ static void clrk_todo_select_first(void)
   LOG("END");
 }
 
-static void clrk_todo_info(void)
+void clrk_todo_info(void)
 {
   HERE();
   clrk_project_t *project;
@@ -552,7 +556,7 @@ static void clrk_todo_info(void)
   LOG("END");
 }
 
-static void clrk_todo_running(void)
+void clrk_todo_running(void)
 {
   HERE();
   clrk_project_t *project;
@@ -571,11 +575,11 @@ static void clrk_todo_running(void)
   LOG("END");
 }
 
-void clrk_init(void)
+void clrk_init(const char *json)
 {
   HERE();
   clerk.current               = NULL;
-  clerk.json                  = NULL;
+  clerk.json                  = json;
   clerk.project_list          = malloc(sizeof(clrk_list_t));
   assert(clerk.project_list);
   clerk.project_list->first   = NULL;

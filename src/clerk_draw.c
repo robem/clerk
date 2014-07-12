@@ -167,6 +167,18 @@ void clrk_draw_project_line(void)
       clrk_draw_text(x, CLRK_DRAW_PRJ_LINE_Y, name, fg, bg);
       x += space_per_project;
     }
+
+    /* Indicate more projects on the left side */
+    if (start->prev) {
+       clrk_draw_text(2, 0, "<", CLRK_COLOR_PROMPT_FG, CLRK_COLOR_PROMPT_BG);
+    }
+
+    /* Indicate more projects on the right side
+     * Now, project is the last one in the list
+     */
+    if (!project->visible) {
+       clrk_draw_text(width-2, 0, ">", CLRK_COLOR_PROMPT_FG, CLRK_COLOR_PROMPT_BG);
+    }
   }
   LOG("END");
 }
