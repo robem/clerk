@@ -12,21 +12,21 @@
 #define   MAGENTA   "\033[35m"
 #define   CYAN      "\033[36m"
 
-#define LOG(...) {\
+#define LOG(...) do {\
   FILE *f = fopen("./LOG", "a"); \
   fprintf(f, "%s: ", __PRETTY_FUNCTION__); \
   fprintf(f, __VA_ARGS__); \
   fprintf(f, "\n"); \
   fflush(f); \
   fclose(f); \
-}
+} while(0)
 
-#define HERE() {\
+#define HERE() do {\
   FILE *f = fopen("./LOG", "a"); \
   fprintf(f, MAGENTA"%s\n"NOCOLOR, __PRETTY_FUNCTION__); \
   fflush(f); \
   fclose(f); \
-}
+} while(0)
 
 #define PTR CYAN"%p"NOCOLOR
 
