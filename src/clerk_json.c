@@ -90,7 +90,6 @@ void clrk_save(void)
 static int yajl_integer(void *ctx, long long i)
 {
    HERE();
-   clrk_config_tracker_t *cfg = ctx;
    switch (i) {
       case CHECKED:
          clrk_todo_tick_off();
@@ -109,7 +108,6 @@ static int yajl_integer(void *ctx, long long i)
 static int yajl_string(void *ctx, const unsigned char* string, size_t len)
 {
   HERE();
-  clrk_config_tracker_t *cfg = ctx;
   char *buf;
 
   /* Write todo text */
@@ -157,10 +155,9 @@ bool clrk_load(void)
   HERE();
   FILE *config;
   size_t file_size;
-  char buffer[CLRK_CONFIG_BUFFER_SIZE], *p;
+  char buffer[CLRK_CONFIG_BUFFER_SIZE];
   yajl_handle parser_handle;
   yajl_status parser_status;
-  clrk_list_elem_t *elem;
 
   /* Free existing projects and todos  */
   while (clerk.current) {
