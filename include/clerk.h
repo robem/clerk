@@ -24,9 +24,9 @@
 #define CLRK_NUM_TODO 30
 
 // Strings
-#define CLRK_PRJ_NAME_SIZE        30
-#define CLRK_TODO_MESSAGE_SIZE   100
-#define CLRK_INPUT_BUFFER_SIZE  1000
+#define CLRK_PRJ_NAME_SIZE             30
+#define CLRK_TODO_INIT_MESSAGE_SIZE   100
+#define CLRK_INPUT_INIT_BUFFER_SIZE   100
 
 typedef enum todo_state {
   UNCHECKED,
@@ -36,13 +36,13 @@ typedef enum todo_state {
 } todo_state_t;
 
 typedef struct clrk_todo {
-  char message[CLRK_TODO_MESSAGE_SIZE];
+  char *message;
   todo_state_t state;
   bool visible;
 } clrk_todo_t;
 
 typedef struct clrk_project {
-  char name[CLRK_PRJ_NAME_SIZE];
+  char *name;
   clrk_list_t *todo_list;
   clrk_list_elem_t *current;
   bool visible;

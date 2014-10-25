@@ -2,33 +2,42 @@
 
 clrk_clerk_t clerk;
 
-static void clrk_input(char *text, char *buffer)
+static char * clrk_input(char *text)
 {
   HERE();
-  unsigned i, cx, cy;
+  unsigned buffer_idx, buffer_size, cx, cy;
   struct tb_event event;
   bool space = false;
+  char *buffer = NULL;
 
-  memset((void*)buffer, '\0', CLRK_INPUT_BUFFER_SIZE);
-
-  cy = tb_height() - 1;
-  cx = 2;
+  cy = tb_height() - 1; /* Y: input line */
+  cx = 2;               /* X: start with an offset */
 
   clrk_draw_show_input_line();
-  tb_present();
 
   /* Draw given text and set cursor at the end */
   if (text) {
-    strncpy(buffer, text, CLRK_INPUT_BUFFER_SIZE);
+    LOG("Use provided text");
+    unsigned text_len = strlen(text);
+    buffer = malloc(text_len);
+    buffer_size = text_len;
+    /* XXX sanity check for string length */
+    strncpy(buffer, text, text_len + 1);
     clrk_draw_text(cx, cy, text, 15, CLRK_COLOR_INPUT_BG);
-    cx += strlen(text);
+    cx += text_len;
     tb_set_cursor(cx, cy);
-    tb_present();
+  } else {
+    LOG("Create empty buffer");
+    buffer = malloc(CLRK_INPUT_INIT_BUFFER_SIZE);
+    buffer_size = CLRK_INPUT_INIT_BUFFER_SIZE;
+    memset((void*)buffer, '\0', buffer_size);
   }
+
+  tb_present();
 
   /* Start input loop */
   while (tb_poll_event(&event)) {
-    i = cx - 2;
+    buffer_idx = cx - 2;
     if (event.type == TB_EVENT_KEY) {
       space = (event.key == TB_KEY_SPACE);
 
@@ -37,51 +46,71 @@ static void clrk_input(char *text, char *buffer)
       } else if (event.key == TB_KEY_ENTER) {
         clrk_draw_remove_input_line();
         LOG("END; return buffer \"%s\" @ %p", buffer, buffer);
-        return;
+        return buffer;
       } else if (event.key == TB_KEY_BACKSPACE || event.key == TB_KEY_BACKSPACE2) {
-        if (i > 0) {
-          size_t tail = strlen(&buffer[i]);
+        /* Remove character */
+        if (buffer_idx > 0) {
+          size_t tail = strlen(&buffer[buffer_idx]);
           if (tail) {
+            /* Remove in between */
             LOG("copy tail [%zu]", tail);
             /* Shift tail by 1 to the left */
-            char *helper = strdup(&buffer[i]);
-            memcpy(&buffer[i-1], helper, strlen(helper));
+            char *helper = strdup(&buffer[buffer_idx]);
+            memcpy(&buffer[buffer_idx-1], helper, strlen(helper));
             free(helper);
             /* Paint over last character */
-            buffer[i+tail-1] = ' ';
-            clrk_draw_text(cx - 1, cy, &buffer[i-1], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+            buffer[buffer_idx+tail-1] = ' ';
+            clrk_draw_text(cx - 1, cy, &buffer[buffer_idx-1], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
             /* Clear last character */
-            buffer[i+tail-1] = '\0';
+            buffer[buffer_idx+tail-1] = '\0';
           } else {
             LOG("remove last char");
-            buffer[i-1] = '\0';
+            buffer[buffer_idx-1] = '\0';
             tb_change_cell(cx - 1, cy, '\0', CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
           }
           tb_set_cursor(--cx, cy);
         }
       } else if ((event.ch > 31 && event.ch < 127) || space) {
-        LOG("input [%d] key %c", i, event.ch);
-        if (i < CLRK_INPUT_BUFFER_SIZE) {
-          if (buffer[i] == '\0') {
-            // Append character
+        /* Add character */
+        LOG("input [%d] key %c", buffer_idx, event.ch);
+add_char:
+        if (buffer_idx < buffer_size) {
+          if (buffer[buffer_idx] == '\0') {
+            LOG("Append character");
+            /* Append */
             tb_change_cell(cx, tb_height() - 1, event.ch, CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
-            buffer[i] = space ? ' ' : event.ch;
+            buffer[buffer_idx] = space ? ' ' : event.ch;
           } else {
-            // Add character in between
-            char *helper = strdup(&buffer[i]);
-            memcpy(&buffer[i+1], helper, strlen(helper));
+            /* Add character in between */
+            LOG("Add character in between");
+            char *helper = strdup(&buffer[buffer_idx]);
+            memcpy(&buffer[buffer_idx+1], helper, strlen(helper));
             free(helper);
-            buffer[i] = space ? ' ' : event.ch;
-            clrk_draw_text(cx, cy, &buffer[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+            buffer[buffer_idx] = space ? ' ' : event.ch;
+            clrk_draw_text(cx, cy, &buffer[buffer_idx], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
           }
           tb_set_cursor(++cx, cy);
+        } else {
+          /* Increase input buffer */
+          LOG("Increase input buffer");
+          buffer = realloc(buffer, buffer_size + CLRK_INPUT_INIT_BUFFER_SIZE);
+          memset(buffer + buffer_size, '\0', CLRK_INPUT_INIT_BUFFER_SIZE);
+          buffer_size += CLRK_INPUT_INIT_BUFFER_SIZE;
+          if (buffer == NULL) {
+            LOG("ERROR: Couldn't realloc input buffer");
+            clrk_draw_remove_input_line();
+            clrk_draw_status("Memory error: Couldn't extend input buffer.");
+            tb_present();
+            return NULL;
+          }
+          goto add_char;
         }
       } else if (event.key == TB_KEY_ARROW_LEFT) {
-        if (i > 0) {
+        if (buffer_idx > 0) {
           tb_set_cursor(--cx, cy);
         }
       } else if (event.key == TB_KEY_ARROW_RIGHT) {
-        if (i < CLRK_INPUT_BUFFER_SIZE && buffer[i] != '\0') {
+        if (buffer_idx < sizeof(buffer) && buffer[buffer_idx] != '\0') {
           tb_set_cursor(++cx, cy);
         }
       }
@@ -92,7 +121,7 @@ static void clrk_input(char *text, char *buffer)
   }
 
   clrk_draw_remove_input_line();
-  return;
+  return NULL;
 }
 
 static clrk_project_t * clrk_project_new(const char *name)
@@ -100,15 +129,17 @@ static clrk_project_t * clrk_project_new(const char *name)
   HERE();
   clrk_project_t *project = malloc(sizeof(clrk_project_t));
   assert(project);
+  const char *string, *default_name = "NONAME";
 
-  memset((void*)project->name, 0, CLRK_PRJ_NAME_SIZE);
   if (name && *name != '\0') {
-    strncpy(project->name, name, CLRK_PRJ_NAME_SIZE);
+    string = name;
   } else {
     /* Set default name if name is empty string or nullptr */
-    strncpy(project->name, "NONAME", 7);
+    string = default_name;
   }
-  memset((void*)name, 0, CLRK_PRJ_NAME_SIZE);
+
+  project->name = malloc(strlen(string) + 1);
+  strncpy(project->name, string, strlen(string) + 1);
 
   project->current = NULL;
   project->todo_list = malloc(sizeof(clrk_list_t));
@@ -129,14 +160,15 @@ clrk_project_t * clrk_project_add(const char *name)
   HERE();
   clrk_list_elem_t *elem;
   clrk_project_t *project;
-  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
+  char *buffer = NULL;
 
   if (name == NULL) {
     /* Create projects interactively */
-    clrk_input(NULL, buffer);
+    buffer = clrk_input(NULL);
   } else {
     /* Create projects while parsing json file */
-    strncpy(buffer, name, CLRK_INPUT_BUFFER_SIZE);
+    buffer = malloc(strlen(name) + 1);
+    strncpy(buffer, name, strlen(name) + 1);
   }
 
   project = clrk_project_new(buffer);
@@ -200,22 +232,22 @@ static void clrk_project_edit_current(void)
   HERE();
   clrk_project_t *project;
   clrk_todo_t *todo;
-  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
-
-  if (buffer == NULL) {
-    LOG("Couldn't allocate input buffer");
-    return;
-  }
+  char *buffer = NULL;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
 
-    clrk_input(project->name, buffer);
+    buffer = clrk_input(project->name);
     if (buffer == '\0') {
       /* No empty string permitted */
       return;
     }
-    strncpy(project->name, buffer, CLRK_PRJ_NAME_SIZE);
+
+    if (strlen(project->name) != strlen(buffer)) {
+      /* Don't waste memory or extend if necessary*/
+      project->name = realloc(project->name, strlen(buffer) + 1);
+    }
+    strncpy(project->name, buffer, strlen(buffer) + 1);
     clrk_draw_project_line();
   }
 
@@ -285,10 +317,16 @@ void clrk_project_remove_current(void)
 static clrk_todo_t * clrk_todo_new(const char *text)
 {
   HERE();
-  clrk_todo_t *todo = malloc(sizeof(clrk_todo_t));
+  clrk_todo_t *todo;
+
+  assert(text);
+
+  todo = (clrk_todo_t*)malloc(sizeof(clrk_todo_t));
   assert(todo);
 
-  strncpy(todo->message, text, CLRK_TODO_MESSAGE_SIZE);
+  /* XXX sanity check for strlen */
+  todo->message = malloc(strlen(text) + 1);
+  strncpy(todo->message, text, strlen(text) + 1);
   todo->state = UNCHECKED;
   todo->visible = false;
 
@@ -304,12 +342,7 @@ clrk_todo_t * clrk_todo_add(const char *text)
   clrk_project_t *project;
   clrk_todo_t *todo;
   clrk_list_elem_t *elem;
-  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
-
-  if (buffer == NULL) {
-    LOG("Couldn't allocate input buffer.");
-    return NULL;
-  }
+  char *buffer = NULL;
 
   if (clerk.project_list == NULL) {
     return NULL;
@@ -318,9 +351,10 @@ clrk_todo_t * clrk_todo_add(const char *text)
   project = clrk_list_elem_data(clerk.current);
 
   if (text == NULL) {
-    clrk_input(NULL, buffer);
+    buffer = clrk_input(NULL);
   } else {
-    strncpy(buffer, text, CLRK_INPUT_BUFFER_SIZE);
+    buffer = malloc(strlen(text) + 1);
+    strncpy(buffer, text, strlen(text) + 1);
   }
 
   todo = clrk_todo_new(buffer);
@@ -343,12 +377,7 @@ static void clrk_todo_edit_current(void)
   HERE();
   clrk_project_t *project;
   clrk_todo_t *todo;
-  char *buffer = malloc(CLRK_INPUT_BUFFER_SIZE);
-
-  if (buffer == NULL) {
-    LOG("Couldn't allocate input buffer.");
-    return;
-  }
+  char *buffer = NULL;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
@@ -356,12 +385,17 @@ static void clrk_todo_edit_current(void)
     if (project->current) {
       todo = clrk_list_elem_data(project->current);
 
-      clrk_input(todo->message, buffer);
+      buffer = clrk_input(todo->message);
       if (buffer == '\0') {
         /* Deleting the whole todo text is not permitted. Use 'T' instead. */
         goto end;
       }
-      strncpy(todo->message, buffer, CLRK_TODO_MESSAGE_SIZE);
+
+      if (strlen(todo->message) != strlen(buffer)) {
+        /* Don't waste memory or extend if necessary*/
+        todo->message = realloc(todo->message, strlen(buffer) + 1);
+      }
+      strncpy(todo->message, buffer, strlen(buffer) + 1);
       clrk_draw_todos();
     }
   }
@@ -623,8 +657,6 @@ void clrk_loop_normal(void)
   clrk_project_t *p;
 
   while (tb_poll_event(&event)) {
-    clrk_draw_todos();
-    tb_present();
     if (event.type == TB_EVENT_KEY) {
       /* Go left */
       if (event.key == TB_KEY_ARROW_LEFT

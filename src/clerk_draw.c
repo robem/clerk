@@ -20,13 +20,14 @@ unsigned int clrk_draw_text(int x, int y, const char *text, int fg, int bg)
   unsigned w = 0, width = tb_width();
   struct tb_cell cells[width];
 
-  while (w < width && *text != '\0') {
+  while ((w+x) < width && *text != '\0') {
     cells[w].ch = *text++;
     cells[w].fg = fg;
     cells[w].bg = bg;
     w++;
   }
 
+  /* Doesn't draw anything if x+w > backbuffer.width */
   tb_blit(x, y, w, 1, cells);
 
   return w;
