@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 #include <yajl/yajl_gen.h>    // gennerate json
 #include <yajl/yajl_parse.h>  // parse json
@@ -22,6 +23,7 @@ void clrk_save(void)
   FILE *file;
   struct yajl_gen_t *g;
 
+  clrk_list_elem_t *project_elem, *todo_elem;
   clrk_project_t *project;
   clrk_todo_t *todo;
 
@@ -37,7 +39,8 @@ void clrk_save(void)
   /* Start with '{' */
   yajl_gen_map_open(g);
 
-  FOR_EACH(project, clerk.project_list) {
+  LIST_FOREACH(project_elem, clerk.project_list) {
+    project = clrk_list_elem_data(project_elem);
     /*
      * Each project is represented as list of tuples.
      * <string> : [ {...}, {...}, ... ]
@@ -47,7 +50,8 @@ void clrk_save(void)
                     strlen(project->name));
     yajl_gen_array_open(g);
 
-    FOR_EACH(todo, project->todo_list) {
+    LIST_FOREACH(todo_elem, project->todo_list) {
+      todo = clrk_list_elem_data(todo_elem);
       /*
        * Each todo is represented as tuple
        * { CLRK_CONFIG_TEXT : <string>,
@@ -64,7 +68,7 @@ void clrk_save(void)
       /* X */
       yajl_gen_string(g, (const unsigned char*)CLRK_CONFIG_X, \
                       strlen(CLRK_CONFIG_X));
-      yajl_gen_bool(g, todo->checked);
+      yajl_gen_integer(g, todo->state);
 
       yajl_gen_map_close(g);
     }
@@ -79,77 +83,72 @@ void clrk_save(void)
   fclose(file);
 }
 
-/* Parser callback functions */
-static int yajl_boolean(void *ctx, int b)
+/*
+ * Parser callback functions
+ */
+
+static int yajl_integer(void *ctx, long long i)
 {
-  HERE();
-  /* printf("bool %s\n", (b?"TRUE":"FALSE")); */
-  clrk_config_tracker_t *cfg = (clrk_config_tracker_t*) ctx;
-  if (cfg->marked && b) {
-    /* printf("\tmarked %s\n", (b?"TRUE":"FALSE")); */
-    clrk_todo_tick_off();
-  }
-  cfg->marked = false;
-  return 1;
+   HERE();
+   clrk_config_tracker_t *cfg = ctx;
+   switch (i) {
+      case CHECKED:
+         clrk_todo_tick_off();
+         break;
+      case RUNNING:
+         clrk_todo_running();
+         break;
+      case INFO:
+         clrk_todo_info();
+         break;
+   }
+   return 1;
+   LOG("END");
 }
 
 static int yajl_string(void *ctx, const unsigned char* string, size_t len)
 {
   HERE();
-  /* printf("string: %s len %zu\n", strndup(string, len), len); */
-  clrk_config_tracker_t *cfg = (clrk_config_tracker_t*) ctx;
+  clrk_config_tracker_t *cfg = ctx;
   char *buf;
-  if (cfg->text) {
-    buf = strndup((const char*)string, len);
-    buf[len] = '\0';
-    clrk_todo_add((const char*)buf);
-    cfg->text = false;
-    /* printf("\t%s\n", strndup((const char*)string, len)); */
-  }
+
+  /* Write todo text */
+  buf = strndup((const char*)string, len);
+  buf[len] = '\0';
+  clrk_todo_add((const char*)buf);
   return 1;
 }
 
 static int yajl_map_key(void *ctx, const unsigned char* key, size_t len)
 {
   HERE();
-  /* printf("map key: %s\n", strndup(key, len)); */
-  clrk_config_tracker_t *cfg = (clrk_config_tracker_t*) ctx;
+  clrk_config_tracker_t *cfg = ctx;
   char buf[100];
   strncpy(buf, (const char*)key, len);
   buf[len] = '\0';
 
   LOG("map key %s\n", buf);
 
+  /* Create project */
   if (!cfg->in_todo) {
-    /* printf("%s\n", cfg->project_name); */
     clrk_project_add(buf);
-    return 1;
   }
-
-  if (!strncmp(buf, "marked", len)) {
-    cfg->marked = true;
-  } else if (!strncmp(buf, "text", len)) {
-    cfg->text = true;
-  }
-
   return 1;
 }
 
 static int yajl_start_array(void *ctx)
 {
   HERE();
-  clrk_config_tracker_t *cfg = (clrk_config_tracker_t*) ctx;
+  clrk_config_tracker_t *cfg = ctx;
   cfg->in_todo = true;
-  /* printf("end array\n"); */
   return 1;
 }
 
 static int yajl_end_array(void *ctx)
 {
   HERE();
-  clrk_config_tracker_t *cfg = (clrk_config_tracker_t*) ctx;
+  clrk_config_tracker_t *cfg = ctx;
   cfg->in_todo = false;
-  /* printf("end array\n"); */
   return 1;
 }
 
@@ -161,7 +160,7 @@ bool clrk_load(void)
   char buffer[CLRK_CONFIG_BUFFER_SIZE], *p;
   yajl_handle parser_handle;
   yajl_status parser_status;
-  clrk_list_t *elem;
+  clrk_list_elem_t *elem;
 
   /* Free existing projects and todos  */
   while (clerk.current) {
@@ -197,7 +196,7 @@ bool clrk_load(void)
 
   /* Prepare for parsing */
   yajl_callbacks callbacks = {
-    .yajl_boolean     = yajl_boolean,
+    .yajl_integer     = yajl_integer,
     .yajl_string      = yajl_string,
     .yajl_map_key     = yajl_map_key,
     .yajl_start_array = yajl_start_array,
@@ -206,8 +205,6 @@ bool clrk_load(void)
 
   clrk_config_tracker_t parser_context = {
     .in_todo = false,
-    .marked = false,
-    .text = false
   };
 
   LOG("before alloc");
