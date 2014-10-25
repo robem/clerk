@@ -1,6 +1,8 @@
 #ifndef _CLRK_JSON_H
 #define _CLRK_JSON_H
 
+#include <stdbool.h>
+
 #define CLRK_CONFIG_BUFFER_SIZE 1024*1024
 
 /*

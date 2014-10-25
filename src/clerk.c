@@ -231,7 +231,6 @@ static void clrk_project_edit_current(void)
 {
   HERE();
   clrk_project_t *project;
-  clrk_todo_t *todo;
   char *buffer = NULL;
 
   if (clerk.current) {
@@ -257,7 +256,6 @@ static void clrk_project_edit_current(void)
 void clrk_project_remove_current(void)
 {
   HERE();
-  int i;
   clrk_project_t *project;
 
   if (clerk.project_list == NULL || clerk.current == NULL) {
@@ -456,7 +454,7 @@ static void clrk_todo_remove_current(void)
 
 static clrk_list_elem_t * clrk_todo_select_next(void) {
   HERE();
-  clrk_project_t *project;
+  clrk_project_t *project = NULL;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
@@ -473,7 +471,7 @@ static clrk_list_elem_t * clrk_todo_select_next(void) {
 static clrk_list_elem_t * clrk_todo_select_prev(void)
 {
   HERE();
-  clrk_project_t *project;
+  clrk_project_t *project = NULL;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
@@ -489,7 +487,7 @@ static clrk_list_elem_t * clrk_todo_select_prev(void)
 static clrk_list_elem_t * clrk_todo_move_up(void)
 {
   HERE();
-  clrk_project_t *project;
+  clrk_project_t *project = NULL;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
@@ -508,7 +506,7 @@ static clrk_list_elem_t * clrk_todo_move_up(void)
 static clrk_list_elem_t * clrk_todo_move_down(void)
 {
   HERE();
-  clrk_project_t *project;
+  clrk_project_t *project = NULL;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
@@ -547,7 +545,6 @@ static void clrk_todo_select_last(void)
 {
   HERE();
   clrk_project_t *project;
-  clrk_list_elem_t *e;
 
   if (clerk.current) {
     project = clrk_list_elem_data(clerk.current);
@@ -652,9 +649,8 @@ void clrk_init(const char *json)
 void clrk_loop_normal(void)
 {
   HERE();
-  char *input, last_char_key;
+  char last_char_key;
   struct tb_event event;
-  clrk_project_t *p;
 
   while (tb_poll_event(&event)) {
     if (event.type == TB_EVENT_KEY) {
