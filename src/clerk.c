@@ -339,12 +339,12 @@ clrk_todo_t * clrk_todo_add(const char *text)
 {
   HERE();
   clrk_project_t *project;
-  clrk_todo_t *todo;
+  clrk_todo_t *todo = NULL;
   clrk_list_elem_t *elem;
   char *buffer = NULL;
 
   if (clerk.project_list == NULL) {
-    return NULL;
+    goto out;
   }
 
   project = clrk_list_elem_data(clerk.current);
@@ -354,6 +354,11 @@ clrk_todo_t * clrk_todo_add(const char *text)
   } else {
     buffer = malloc(strlen(text) + 1);
     strncpy(buffer, text, strlen(text) + 1);
+  }
+
+  /* Empty strings are not permitted. */
+  if (buffer == NULL || buffer[0] == '\0') {
+    goto out;
   }
 
   todo = clrk_todo_new(buffer);
@@ -367,6 +372,7 @@ clrk_todo_t * clrk_todo_add(const char *text)
   project->current = elem;
   clrk_draw_todos();
 
+out:
   LOG("END");
   return todo;
 }
