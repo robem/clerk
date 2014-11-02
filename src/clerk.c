@@ -237,9 +237,9 @@ static void clrk_project_edit_current(void)
     project = clrk_list_elem_data(clerk.current);
 
     buffer = clrk_input(project->name);
-    if (buffer == '\0') {
+    if (buffer == NULL || buffer[0] == '\0') {
       /* No empty string permitted */
-      return;
+      goto end;
     }
 
     if (strlen(project->name) != strlen(buffer)) {
@@ -250,6 +250,7 @@ static void clrk_project_edit_current(void)
     clrk_draw_project_line();
   }
 
+end:
   free(buffer);
 }
 
@@ -384,7 +385,7 @@ static void clrk_todo_edit_current(void)
       todo = clrk_list_elem_data(project->current);
 
       buffer = clrk_input(todo->message);
-      if (buffer == '\0') {
+      if (buffer == NULL || buffer[0] == '\0') {
         /* Deleting the whole todo text is not permitted. Use 'T' instead. */
         goto end;
       }
