@@ -613,7 +613,7 @@ void clrk_todo_running(void)
   LOG("END");
 }
 
-void clrk_init(const char *json)
+void clrk_init(const char *json, const char *config)
 {
   HERE();
   clerk.current               = NULL;
@@ -623,13 +623,45 @@ void clrk_init(const char *json)
   clerk.project_list->first   = NULL;
   clerk.project_list->last    = NULL;
   clerk.project_list->num_of_elems = 0;
+  clerk.config                   = config;
+  clerk.colors                   = malloc(sizeof(color_configuration_t));
+  /* Set all colors to -1 due 0 is a valid color */
+  clerk.colors->bg               = -1;
+  clerk.colors->project_fg       = -1;
+  clerk.colors->project_bg       = -1;
+  clerk.colors->project_selected = -1;
+  clerk.colors->todo_fg          = -1;
+  clerk.colors->todo_bg          = -1;
+  clerk.colors->todo_selected    = -1;
+  clerk.colors->todo             = -1;
+  clerk.colors->done             = -1;
+  clerk.colors->star             = -1;
+  clerk.colors->info             = -1;
+  clerk.colors->prompt_fg        = -1;
+  clerk.colors->prompt_bg        = -1;
+  clerk.colors->input_fg         = -1;
+  clerk.colors->input_bg         = -1;
+
+  if (!clrk_read_config()) {
+    /* Show help screen */
+    clrk_draw_help();
+    clrk_draw_status("Couldn't load config");
+    /* wait for ANY input key */
+    tb_present();
+    struct tb_event event;
+    while (tb_poll_event(&event)) {
+      if (event.type == TB_EVENT_KEY) {
+        break;
+      }
+    }
+  }
 
   clrk_draw_init();
 
   if (!clrk_load()) {
     /* Show help screen */
     clrk_draw_help();
-    clrk_draw_status("Couldn't load config");
+    clrk_draw_status("Couldn't load todos");
     /* wait for ANY input key */
     tb_present();
     struct tb_event event;
@@ -691,6 +723,16 @@ void clrk_loop_normal(void)
         }
       } else {
         switch (event.ch) {
+          case 'C':
+            LOG(RED"key 'C'"NOCOLOR);
+            /* Load config file */
+            if (clrk_read_config()) {
+              clrk_draw();
+              clrk_draw_status("loaded config");
+            } else {
+              clrk_draw_status("couldn't load config");
+            }
+            break;
           case 'e':
             /* Edit todo */
             LOG(RED"key 'e'"NOCOLOR);
@@ -765,7 +807,7 @@ void clrk_loop_normal(void)
               clrk_draw();
               clrk_draw_status("loaded json");
             } else {
-              clrk_draw_status("cannot find json");
+              clrk_draw_status("couldn't load json");
             }
             break;
           case 'S':
@@ -834,5 +876,7 @@ void clrk_loop_normal(void)
     }
     tb_present();
   }
+  /* Deinit */
   free(clerk.project_list);
+  free(clerk.colors);
 }

@@ -62,21 +62,21 @@ void clrk_draw_project_line(void)
   width = tb_width();
 
   /* Draw background line */
-  clrk_draw_line(0, CLRK_COLOR_PRJ_LINE);
+  bg = clerk.colors->project_bg != -1 ? clerk.colors->project_bg : CLRK_COLOR_PRJ_BG;
+  clrk_draw_line(0, bg);
 
   /* Draw number of project in the first field */
 #define NUM_BUF_LEN 4
   char num_buf[NUM_BUF_LEN];
   length = itoa(&num_buf[NUM_BUF_LEN - 1], clerk.project_list->num_of_elems);
+  fg = clerk.colors->project_selected != -1 ? clerk.colors->project_selected : CLRK_COLOR_PRJ_CURRENT;
   for (i = 0; i < length; ++i) {
-    tb_change_cell(i, CLRK_DRAW_PRJ_LINE_Y, num_buf[NUM_BUF_LEN - length + i],
-        CLRK_COLOR_PRJ_CURRENT, CLRK_COLOR_PRJ_LINE);
+    tb_change_cell(i, CLRK_DRAW_PRJ_LINE_Y, num_buf[NUM_BUF_LEN - length + i], fg, bg);
   }
 #undef NUM_BUF_LEN
 
   if (clerk.project_list->num_of_elems > 0) {
-    fg = CLRK_COLOR_PRJ_FG;
-    bg = CLRK_COLOR_PRJ_BG;
+    fg = clerk.colors->project_fg != -1 ? clerk.colors->project_fg : CLRK_COLOR_PRJ_FG;
 
     /* Draw project names */
     x = 3;
@@ -159,9 +159,9 @@ void clrk_draw_project_line(void)
 
       /* Highlight currently selected project */
       if (project == clrk_list_elem_data(clerk.current)) {
-        bg = CLRK_COLOR_PRJ_CURRENT;
+        bg = clerk.colors->project_selected != -1 ? clerk.colors->project_selected : CLRK_COLOR_PRJ_CURRENT;
       } else {
-        bg = CLRK_COLOR_PRJ_BG;
+        bg = clerk.colors->project_bg != -1 ? clerk.colors->project_bg : CLRK_COLOR_PRJ_BG;
       }
 
       LOG("draw project '%s'", name);
@@ -170,15 +170,17 @@ void clrk_draw_project_line(void)
     }
 
     /* Indicate more projects on the left side */
+    fg = clerk.colors->prompt_fg != -1 ? clerk.colors->prompt_fg : CLRK_COLOR_PROMPT_FG;
+    bg = clerk.colors->prompt_bg != -1 ? clerk.colors->prompt_bg : CLRK_COLOR_PROMPT_BG;
     if (start->prev) {
-       clrk_draw_text(2, 0, "<", CLRK_COLOR_PROMPT_FG, CLRK_COLOR_PROMPT_BG);
+      clrk_draw_text(2, 0, "<", fg, bg);
     }
 
     /* Indicate more projects on the right side
      * Now, project is the last one in the list
      */
     if (!project->visible) {
-       clrk_draw_text(width-2, 0, ">", CLRK_COLOR_PROMPT_FG, CLRK_COLOR_PROMPT_BG);
+       clrk_draw_text(width-2, 0, ">", fg, bg);
     }
   }
   LOG("END");
@@ -193,8 +195,10 @@ static void clrk_draw_todo_clear(void)
   width = tb_width();
   height = tb_height() - (CLRK_DRAW_PRJ_LINE_Y + 1);
 
+  int bg = clerk.colors->bg != -1 ? clerk.colors->bg : CLRK_COLOR_BG;
+
   struct tb_cell cells[width * height];
-  struct tb_cell cell = {.ch = ' ', .fg = 15, .bg = 16};
+  struct tb_cell cell = {.ch = ' ', .fg = 0, .bg = bg};
 
   for (i = 0; i < (width * height); ++i) {
     cells[i] = cell;
@@ -211,6 +215,7 @@ void clrk_draw_todos(void)
   clrk_list_elem_t *todo_elem;
   clrk_todo_t *todo;
   clrk_project_t *project;
+  int fg, bg;
 
   clrk_draw_todo_clear();
 
@@ -277,15 +282,18 @@ void clrk_draw_todos(void)
         }
 
         /* Draw checkbox */
+        fg = clerk.colors->todo_fg != -1 ? clerk.colors->todo_fg : CLRK_COLOR_TODO_FG;
+        bg = clerk.colors->todo_bg != -1 ? clerk.colors->todo_bg : CLRK_COLOR_TODO_BG;
         char todo_state[] = "[ ] ";
         todo_state[1] = state_description[todo->state].c;
-        clrk_draw_text(x, y, todo_state, state_description[todo->state].color, CLRK_COLOR_TODO_BG);
+        clrk_draw_text(x, y, todo_state, state_description[todo->state].color, bg);
 
         /* Highlight background if todo is selected */
         if (todo == clrk_list_elem_data(project->current)) {
-          clrk_draw_text(x+4, y, todo->message, CLRK_COLOR_TODO_FG, CLRK_COLOR_TODO_CURRENT);
+          bg = clerk.colors->todo_selected != -1 ? clerk.colors->todo_selected : CLRK_COLOR_TODO_CURRENT;
+          clrk_draw_text(x+4, y, todo->message, fg, bg);
         } else {
-          clrk_draw_text(x+4, y, todo->message, CLRK_COLOR_TODO_FG, CLRK_COLOR_TODO_BG);
+          clrk_draw_text(x+4, y, todo->message, fg, bg);
         }
         LOG("\tdraw todo: x=%d, y=%d, msg=%s, visible=%s, visible_todos=%d", x+4, y, todo->message, todo->visible?"true":"false", visible_todos);
         y += 3;
@@ -298,12 +306,16 @@ void clrk_draw_todos(void)
 void clrk_draw_show_input_line(void)
 {
   unsigned height = tb_height();
+  int fg, bg;
+
+  fg = clerk.colors->input_fg != -1 ? clerk.colors->input_fg : CLRK_COLOR_INPUT_FG;
+  bg = clerk.colors->input_bg != -1 ? clerk.colors->input_bg : CLRK_COLOR_INPUT_BG;
 
   /* Draw background command line */
-  clrk_draw_line(height - 1, CLRK_COLOR_INPUT_BG);
+  clrk_draw_line(height - 1, bg);
 
   /* Draw prompt */
-  clrk_draw_text(0, height - 1, "> ", CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+  clrk_draw_text(0, height - 1, "> ", fg, bg);
 
   /* Set cursor */
   tb_set_cursor(2, height - 1);
@@ -312,8 +324,9 @@ void clrk_draw_show_input_line(void)
 void clrk_draw_remove_input_line(void)
 {
   unsigned height = tb_height();
+  int bg = clerk.colors->todo_bg != -1 ? clerk.colors->todo_bg : CLRK_COLOR_TODO_BG;
   /* Remove command line */
-  clrk_draw_line(height - 1, CLRK_COLOR_TODO_BG);
+  clrk_draw_line(height - 1, bg);
 
   /* Unset cursor */
   tb_set_cursor(TB_HIDE_CURSOR, TB_HIDE_CURSOR);
@@ -323,16 +336,25 @@ void clrk_draw_status(const char* status)
 {
   unsigned height = tb_height();
   const char *prompt = " clerk ";
+  int fg, bg;
+
+  bg = clerk.colors->input_bg != -1 ? clerk.colors->input_bg : CLRK_COLOR_INPUT_BG;
 
   /* Draw background command line */
-  clrk_draw_line(height - 1, CLRK_COLOR_INPUT_BG);
+  clrk_draw_line(height - 1, bg);
+
+  fg = clerk.colors->prompt_fg != -1 ? clerk.colors->prompt_fg : CLRK_COLOR_PROMPT_FG;
+  bg = clerk.colors->prompt_bg != -1 ? clerk.colors->prompt_bg : CLRK_COLOR_PROMPT_BG;
 
   /* Draw prompt */
-  clrk_draw_text(0, height - 1, prompt, CLRK_COLOR_PROMPT_FG, CLRK_COLOR_PROMPT_BG);
+  clrk_draw_text(0, height - 1, prompt, fg, bg);
+
+  fg = clerk.colors->input_fg != -1 ? clerk.colors->input_fg : CLRK_COLOR_INPUT_FG;
+  bg = clerk.colors->input_bg != -1 ? clerk.colors->input_bg : CLRK_COLOR_INPUT_BG;
 
   /* Draw status message */
-  clrk_draw_text(0 + strlen(prompt), height - 1, " ", CLRK_COLOR_INPUT_FG | TB_BOLD, CLRK_COLOR_INPUT_BG);
-  clrk_draw_text(0 + strlen(prompt) + 1, height - 1, status, CLRK_COLOR_INPUT_FG | TB_BOLD, CLRK_COLOR_INPUT_BG);
+  clrk_draw_text(0 + strlen(prompt), height - 1, " ", fg | TB_BOLD, bg);
+  clrk_draw_text(0 + strlen(prompt) + 1, height - 1, status, fg | TB_BOLD, bg);
 }
 
 void clrk_draw_help(void)
@@ -341,6 +363,7 @@ void clrk_draw_help(void)
   unsigned height = tb_height();
   unsigned width  = tb_width();
   unsigned i = 0;
+  int fg, bg;
 
   /* TODO: Keys should be obtained from a config file */
   /* Define help text */
@@ -405,10 +428,12 @@ void clrk_draw_help(void)
   struct tb_cell cells[width * text_height];
 
   /* Craft text box and fill it with background color */
+  fg = clerk.colors->input_fg != -1 ? clerk.colors->input_fg : CLRK_COLOR_INPUT_FG;
+  bg = clerk.colors->input_bg != -1 ? clerk.colors->input_bg : CLRK_COLOR_INPUT_BG;
   for (i = 0; i < (width * text_height); ++i) {
     cells[i].ch = ' ';
-    cells[i].fg = CLRK_COLOR_INPUT_FG;
-    cells[i].bg = CLRK_COLOR_INPUT_BG;
+    cells[i].fg = fg;
+    cells[i].bg = bg;
   }
 
   /* Draw text box */
@@ -416,7 +441,7 @@ void clrk_draw_help(void)
 
   /* Draw help text */
   for (i = 0; i < lines; ++i) {
-    clrk_draw_text(1, start_line + i, help_text[i], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+    clrk_draw_text(1, start_line + i, help_text[i], fg, bg);
   }
 
   LOG("END");
@@ -427,13 +452,13 @@ void clrk_draw_init(void)
   HERE();
 
   state_description[UNCHECKED].c     = ' ';
-  state_description[UNCHECKED].color = CLRK_COLOR_CHECKED_FALSE;
+  state_description[UNCHECKED].color = (clerk.colors->todo != -1 ? clerk.colors->todo : CLRK_COLOR_CHECKED_FALSE);
   state_description[CHECKED].c       = 'X';
-  state_description[CHECKED].color   = CLRK_COLOR_CHECKED_TRUE;
+  state_description[CHECKED].color   = (clerk.colors->done != -1 ? clerk.colors->done : CLRK_COLOR_CHECKED_TRUE);
   state_description[RUNNING].c       = '*';
-  state_description[RUNNING].color   = CLRK_COLOR_RUNNING_TRUE;
+  state_description[RUNNING].color   = (clerk.colors->star != -1 ? clerk.colors->star : CLRK_COLOR_RUNNING_TRUE);
   state_description[INFO].c          = 'i';
-  state_description[INFO].color      = CLRK_COLOR_INFO_TRUE;
+  state_description[INFO].color      = (clerk.colors->info != -1 ? clerk.colors->info : CLRK_COLOR_INFO_TRUE);
 
   LOG("END");
 }

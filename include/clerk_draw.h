@@ -13,6 +13,8 @@
 #define CLRK_DRAW_NUM_TODO_STATES 10
 
 // Colors
+#define CLRK_COLOR_BG              0
+
 #define CLRK_COLOR_PRJ_LINE       17
 #define CLRK_COLOR_PRJ_BG         17
 #define CLRK_COLOR_PRJ_FG         15
@@ -31,6 +33,29 @@
 
 #define CLRK_COLOR_INPUT_FG  15
 #define CLRK_COLOR_INPUT_BG 235
+
+typedef struct color_configuration {
+  int bg;
+
+  int project_fg;
+  int project_bg;
+  int project_selected;
+
+  int todo_fg;
+  int todo_bg;
+  int todo_selected;
+
+  int todo;
+  int done;
+  int star;
+  int info;
+
+  int prompt_fg;
+  int prompt_bg;
+
+  int input_fg;
+  int input_bg;
+} color_configuration_t;
 
 struct state_descriptor {
   char c;

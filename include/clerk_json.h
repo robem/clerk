@@ -20,6 +20,11 @@ typedef struct clrk_config_tracker {
 void clrk_save(void);
 
 /*
+ * Read config file and set options
+ */
+bool clrk_read_config(void);
+
+/*
  * Loads JSON config file
  */
 bool clrk_load(void);

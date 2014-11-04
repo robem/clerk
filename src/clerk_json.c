@@ -3,7 +3,8 @@
 #include <string.h>
 
 #include <yajl/yajl_gen.h>    // gennerate json
-#include <yajl/yajl_parse.h>  // parse json
+#include <yajl/yajl_parse.h>  // react while parsing
+#include <yajl/yajl_tree.h>   // work on tree after parsing
 
 #include <clerk.h>
 #include <clerk_draw.h>
@@ -150,6 +151,110 @@ static int yajl_end_array(void *ctx)
   return 1;
 }
 
+bool clrk_read_config(void)
+{
+  HERE();
+  FILE *config;
+  size_t file_size;
+  char *buffer;
+  yajl_val node;
+  char err_buf[1024];
+  const char **path_runner;
+  unsigned i, num_of_options;
+
+#define PATH_DEPTH 5
+  const char *color_paths[][PATH_DEPTH] = {
+    {"colors" ,"background"  ,(const char*) 0},
+    {"colors" ,"project"     ,"foreground" ,(const char*) 0},
+    {"colors" ,"project"     ,"background" ,(const char*) 0},
+    {"colors" ,"project"     ,"selected"   ,(const char*) 0},
+    {"colors" ,"todo"        ,"foreground" ,(const char*) 0},
+    {"colors" ,"todo"        ,"background" ,(const char*) 0},
+    {"colors" ,"todo"        ,"selected"   ,(const char*) 0},
+    {"colors" ,"todo-state"  ,"todo"       ,(const char*) 0},
+    {"colors" ,"todo-state"  ,"done"       ,(const char*) 0},
+    {"colors" ,"todo-state"  ,"star"       ,(const char*) 0},
+    {"colors" ,"todo-state"  ,"info"       ,(const char*) 0},
+    {"colors" ,"status-line" ,"pormpt"     ,"foreground"    ,(const char*) 0},
+    {"colors" ,"status-line" ,"prompt"     ,"background"    ,(const char*) 0},
+    {"colors" ,"status-line" ,"input"      ,"foreground"    ,(const char*) 0},
+    {"colors" ,"status-line" ,"input"      ,"background"    ,(const char*) 0}
+  };
+
+  /* XXX Order is important. Has to match the above. */
+  int *color_options[] = {
+    &clerk.colors->bg,
+    &clerk.colors->project_fg,
+    &clerk.colors->project_bg,
+    &clerk.colors->project_selected,
+    &clerk.colors->todo_fg,
+    &clerk.colors->todo_bg,
+    &clerk.colors->todo_selected,
+    &clerk.colors->todo,
+    &clerk.colors->done,
+    &clerk.colors->star,
+    &clerk.colors->info,
+    &clerk.colors->todo_selected,
+    &clerk.colors->prompt_fg,
+    &clerk.colors->prompt_bg,
+    &clerk.colors->input_fg,
+    &clerk.colors->input_bg,
+  };
+
+  /* XXX assuming 64 bit */
+  num_of_options = sizeof(color_paths) / (8 * PATH_DEPTH);
+#undef PATH_DEPTH
+
+  clerk.config = clerk.config ? clerk.config : CLRK_CONFIG_FILE;
+
+  config = fopen(clerk.config, "r");
+  if (config == NULL) {
+    LOG("END");
+    clrk_draw_status("Couldn't open config file: "CLRK_CONFIG_FILE);
+    return false;
+  }
+
+  fseek(config, 0, SEEK_END);
+  file_size = ftell(config);
+  fseek(config, 0, SEEK_SET);
+
+  buffer = (char*)malloc(file_size);
+  fread(buffer, file_size, 1, config);
+  fclose(config);
+
+  node = yajl_tree_parse((const char*)buffer, err_buf, sizeof(err_buf));
+
+  if (node == NULL) {
+    LOG("END");
+    clrk_draw_status("yajl_tree_parse failed on: "CLRK_CONFIG_FILE);
+    goto out;
+  }
+
+  /* Get color options */
+  for (i=0; i<num_of_options; ++i) {
+    path_runner = color_paths[i];
+    yajl_val v = yajl_tree_get(node, path_runner, yajl_t_number);
+
+    if (v && YAJL_IS_INTEGER(v)) {
+      *color_options[i] = YAJL_GET_INTEGER(v);
+      LOG("Set color option to value %d", *color_options[i]);
+    } else {
+      /* Make sure it is _not_ 0 due 0 is a valid color value */
+      LOG("Set color option to -1");
+      *color_options[i] = -1;
+    }
+  }
+
+  free(buffer);
+  LOG("END");
+  return true;
+
+out:
+  free(buffer);
+  LOG("END");
+  return false;
+}
+
 bool clrk_load(void)
 {
   HERE();
@@ -165,7 +270,7 @@ bool clrk_load(void)
   }
 
   /* Load config file */
-  clerk.json = clerk.json ? clerk.json : CLRK_CONFIG_FILE;
+  clerk.json = clerk.json ? clerk.json : CLRK_DATA_FILE;
   LOG("before openfile %s", clerk.json);
   config = fopen(clerk.json, "r");
 
@@ -181,7 +286,7 @@ bool clrk_load(void)
   fseek(config, 0, SEEK_SET);
 
   if (file_size > CLRK_CONFIG_BUFFER_SIZE) {
-    clrk_draw_status("File size greater than buffer size: "CLRK_CONFIG_FILE);
+    clrk_draw_status("File size greater than buffer size: "CLRK_DATA_FILE);
     goto out;
   }
 

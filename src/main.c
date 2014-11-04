@@ -5,7 +5,8 @@
 void usage(char *program_name)
 {
   printf("Usage: %s\n\n"
-         "  -j|--json\tSpecify json data\n"
+         "  -c|--config\tSpecify config\n"
+         "  -t|--todos\tSpecify todo data file\n"
          "  -h|--help\tPrint this screen\n",
          program_name);
 }
@@ -15,10 +16,12 @@ int main(int argc, char *const *argv)
   LOG(BLUE"============================"NOCOLOR);
 
   int opt, option_index;
-  const char *short_options = "hj:";
+  const char *short_options = "ht:c:";
+  const char *config = NULL;
   const char *json = NULL;
   struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
+    {"config", required_argument, 0, 'c'},
     {"json", required_argument, 0, 'j'},
     {0, 0, 0, 0}
   };
@@ -37,7 +40,10 @@ int main(int argc, char *const *argv)
       case 'h':
         usage(argv[0]);
         return EXIT_SUCCESS;
-      case 'j':
+      case 'c':
+        config = optarg;
+        break;
+      case 't':
         json = optarg;
         break;
       case '?':
@@ -50,7 +56,7 @@ int main(int argc, char *const *argv)
 
   tb_select_output_mode(TB_OUTPUT_256);
 
-  clrk_init(json);
+  clrk_init(json, config);
 
   clrk_loop_normal();
 

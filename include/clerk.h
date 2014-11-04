@@ -16,14 +16,14 @@
 #define CLRK_MIN_HEIGHT 10
 #define CLRK_MIN_WIDTH  20
 
-#define CLRK_CONFIG_FILE "clerk.json"
+#define CLRK_CONFIG_FILE "clerk-config.json"
+#define CLRK_DATA_FILE   "clerk-todos.json"
 #define CLRK_CONFIG_X    "state"
 #define CLRK_CONFIG_TEXT "text"
 
 #define CLRK_NUM_PRJ  20
 #define CLRK_NUM_TODO 30
 
-// Strings
 #define CLRK_PRJ_NAME_SIZE             30
 #define CLRK_TODO_INIT_MESSAGE_SIZE   100
 #define CLRK_INPUT_INIT_BUFFER_SIZE   100
@@ -52,12 +52,14 @@ typedef struct clrk_clerk {
   const char *json;
   clrk_list_t *project_list;
   clrk_list_elem_t *current;
+  const char *config;
+  color_configuration_t *colors;
 } clrk_clerk_t;
 
 /*
  * Initialize Clerk with default values and draws user interface.
  */
-void clrk_init(const char *json);
+void clrk_init(const char *json, const char *config);
 
 /*
  * Create/add a new project
