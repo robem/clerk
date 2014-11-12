@@ -317,6 +317,7 @@ bool clrk_load(void)
 
   if (parser_status != yajl_status_ok) {
     yajl_free(parser_handle);
+    LOG("%d", parser_status);
     LOG("End");
     return false;
   }

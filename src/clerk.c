@@ -343,7 +343,8 @@ clrk_todo_t * clrk_todo_add(const char *text)
   clrk_list_elem_t *elem;
   char *buffer = NULL;
 
-  if (clerk.project_list == NULL) {
+  assert(clerk.project_list);
+  if (clerk.project_list->num_of_elems <= 0) {
     goto out;
   }
 
