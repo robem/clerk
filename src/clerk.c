@@ -110,7 +110,7 @@ add_char:
           tb_set_cursor(--cx, cy);
         }
       } else if (event.key == TB_KEY_ARROW_RIGHT) {
-        if (buffer_idx < sizeof(buffer) && buffer[buffer_idx] != '\0') {
+        if (buffer_idx < buffer_size && buffer[buffer_idx] != '\0') {
           tb_set_cursor(++cx, cy);
         }
       }
