@@ -13,7 +13,7 @@
 #define CLRK_DRAW_NUM_TODO_STATES 10
 
 // Colors
-#define CLRK_COLOR_BG              0
+#define CLRK_COLOR_BG             16
 
 #define CLRK_COLOR_PRJ_LINE       17
 #define CLRK_COLOR_PRJ_BG         17
