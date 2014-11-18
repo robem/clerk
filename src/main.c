@@ -22,7 +22,7 @@ int main(int argc, char *const *argv)
   struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"config", required_argument, 0, 'c'},
-    {"json", required_argument, 0, 'j'},
+    {"todos", required_argument, 0, 't'},
     {0, 0, 0, 0}
   };
 
