@@ -313,7 +313,7 @@ bool clrk_load(void)
   parser_handle = yajl_alloc((const yajl_callbacks*)&callbacks, NULL, &parser_context);
 
   LOG("before parse");
-  parser_status = yajl_parse(parser_handle, (const unsigned char*)buffer, sizeof(buffer));
+  parser_status = yajl_parse(parser_handle, (const unsigned char*)buffer, file_size);
 
   if (parser_status != yajl_status_ok) {
     yajl_free(parser_handle);
