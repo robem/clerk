@@ -18,7 +18,7 @@ int main(int argc, char *const *argv)
   int opt, option_index;
   const char *short_options = "ht:c:";
   const char *config = NULL;
-  const char *json = NULL;
+  const char *todos = NULL;
   struct option long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"config", required_argument, 0, 'c'},
@@ -44,7 +44,7 @@ int main(int argc, char *const *argv)
         config = optarg;
         break;
       case 't':
-        json = optarg;
+        todos = optarg;
         break;
       case '?':
         return EXIT_FAILURE;
@@ -56,7 +56,7 @@ int main(int argc, char *const *argv)
 
   tb_select_output_mode(TB_OUTPUT_256);
 
-  clrk_init(json, config);
+  clrk_init(todos, config);
 
   clrk_loop_normal();
 
