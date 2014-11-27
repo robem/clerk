@@ -1,6 +1,6 @@
 # vim: set filetype=python :
 
-YAJL_BUILD_PATH    = "./lib/yajl/build/yajl-2.0.5/"
+YAJL_BUILD_PATH    = "./lib/yajl/build/yajl-2.1.1"
 TERMBOX_BUILD_PATH = "./lib/termbox/build/"
 
 env = Environment( 

@@ -194,11 +194,10 @@ bool clrk_read_config(void)
     &clerk.colors->done,
     &clerk.colors->star,
     &clerk.colors->info,
-    &clerk.colors->todo_selected,
     &clerk.colors->prompt_fg,
     &clerk.colors->prompt_bg,
     &clerk.colors->input_fg,
-    &clerk.colors->input_bg,
+    &clerk.colors->input_bg
   };
 
   /* XXX assuming 64 bit */
@@ -209,6 +208,7 @@ bool clrk_read_config(void)
 
   config = fopen(clerk.config, "r");
   if (config == NULL) {
+    LOG("Couldn't open config file");
     LOG("END");
     clrk_draw_status("Couldn't open config file: "CLRK_CONFIG_FILE);
     return false;
@@ -225,7 +225,7 @@ bool clrk_read_config(void)
   node = yajl_tree_parse((const char*)buffer, err_buf, sizeof(err_buf));
 
   if (node == NULL) {
-    LOG("END");
+    LOG("yajl_tree_parse failed: %s", err_buf);
     clrk_draw_status("yajl_tree_parse failed on: "CLRK_CONFIG_FILE);
     goto out;
   }

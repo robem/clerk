@@ -10,8 +10,8 @@ static char * clrk_input(char *text)
   bool space = false;
   char *buffer = NULL;
 
-  cy = tb_height() - 1; /* Y: input line */
-  cx = 2;               /* X: start with an offset */
+  cy = CLRK_DRAW_STATUS_LINE;   /* Y: input line */
+  cx = CLRK_DRAW_INPUT_START_X; /* X: start with an offset */
 
   clrk_draw_show_input_line();
 
@@ -38,7 +38,7 @@ static char * clrk_input(char *text)
 
   /* Start input loop */
   while (tb_poll_event(&event)) {
-    buffer_idx = cx - 2;
+    buffer_idx = cx - CLRK_DRAW_INPUT_START_X;
     if (event.type == TB_EVENT_KEY) {
       space = (event.key == TB_KEY_SPACE);
 

@@ -305,20 +305,22 @@ void clrk_draw_todos(void)
 
 void clrk_draw_show_input_line(void)
 {
-  unsigned height = tb_height();
   int fg, bg;
 
   fg = clerk.colors->input_fg != -1 ? clerk.colors->input_fg : CLRK_COLOR_INPUT_FG;
   bg = clerk.colors->input_bg != -1 ? clerk.colors->input_bg : CLRK_COLOR_INPUT_BG;
 
   /* Draw background command line */
-  clrk_draw_line(height - 1, bg);
+  clrk_draw_line(CLRK_DRAW_STATUS_LINE, bg);
+
+  fg = clerk.colors->prompt_fg != -1 ? clerk.colors->prompt_fg : CLRK_COLOR_PROMPT_FG;
+  bg = clerk.colors->prompt_bg != -1 ? clerk.colors->prompt_bg : CLRK_COLOR_PROMPT_BG;
 
   /* Draw prompt */
-  clrk_draw_text(0, height - 1, "> ", fg, bg);
+  clrk_draw_text(0, CLRK_DRAW_STATUS_LINE, " > ", fg, bg);
 
   /* Set cursor */
-  tb_set_cursor(2, height - 1);
+  tb_set_cursor(CLRK_DRAW_INPUT_START_X, CLRK_DRAW_STATUS_LINE);
 }
 
 void clrk_draw_remove_input_line(void)
