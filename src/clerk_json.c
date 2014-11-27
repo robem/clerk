@@ -237,7 +237,7 @@ bool clrk_read_config(void)
 
     if (v && YAJL_IS_INTEGER(v)) {
       *color_options[i] = YAJL_GET_INTEGER(v);
-      LOG("Set color option to value %d", *color_options[i]);
+      LOG("Set color option to value %d %d", i, *color_options[i]);
     } else {
       /* Make sure it is _not_ 0 due 0 is a valid color value */
       LOG("Set color option to -1");

@@ -1,0 +1,31 @@
+{
+  "colors" : {
+    "background": 0,
+    "project": {
+      "foreground": 197,
+      "background": 233,
+      "selected":  238 
+    },
+    "todo": {
+      "foreground": 253,
+      "background": 0,
+      "selected":  238 
+    },
+    "todo-state": {
+      "todo": 197,
+      "done": 2,
+      "star": 45,
+      "info": 226 
+    },
+    "status-line": {
+      "prompt": {
+        "foreground": 0,
+        "background": 197
+      },
+      "input": {
+        "foreground": 253,
+        "background": 100 
+      }
+    }
+  }
+}

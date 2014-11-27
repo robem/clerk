@@ -5,7 +5,7 @@ clrk_clerk_t clerk;
 static char * clrk_input(char *text)
 {
   HERE();
-  unsigned buffer_idx, buffer_size, cx, cy;
+  unsigned buffer_idx, buffer_size, text_len, cx, cy;
   struct tb_event event;
   bool space = false;
   char *buffer = NULL;
@@ -18,16 +18,17 @@ static char * clrk_input(char *text)
   /* Draw given text and set cursor at the end */
   if (text) {
     LOG("Use provided text");
-    unsigned text_len = strlen(text);
+    text_len = strlen(text);
     buffer = malloc(text_len);
-    buffer_size = text_len;
+    buffer_size = text_len + 1;
     /* XXX sanity check for string length */
-    strncpy(buffer, text, text_len + 1);
+    strncpy(buffer, text, buffer_size);
     clrk_draw_text(cx, cy, text, 15, CLRK_COLOR_INPUT_BG);
     cx += text_len;
     tb_set_cursor(cx, cy);
   } else {
     LOG("Create empty buffer");
+    text_len = 0;
     buffer = malloc(CLRK_INPUT_INIT_BUFFER_SIZE);
     buffer_size = CLRK_INPUT_INIT_BUFFER_SIZE;
     memset((void*)buffer, '\0', buffer_size);
@@ -68,13 +69,14 @@ static char * clrk_input(char *text)
             buffer[buffer_idx-1] = '\0';
             tb_change_cell(cx - 1, cy, '\0', CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
           }
+          text_len--;
           tb_set_cursor(--cx, cy);
         }
       } else if ((event.ch > 31 && event.ch < 127) || space) {
         /* Add character */
         LOG("input [%d] key %c", buffer_idx, event.ch);
 add_char:
-        if (buffer_idx < buffer_size) {
+        if ((buffer_idx < buffer_size) && (text_len < (buffer_size-1))) {
           if (buffer[buffer_idx] == '\0') {
             LOG("Append character");
             /* Append */
@@ -89,6 +91,7 @@ add_char:
             buffer[buffer_idx] = space ? ' ' : event.ch;
             clrk_draw_text(cx, cy, &buffer[buffer_idx], CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
           }
+          text_len++;
           tb_set_cursor(++cx, cy);
         } else {
           /* Increase input buffer */
