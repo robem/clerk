@@ -153,7 +153,7 @@ clrk_project_t * clrk_project_add(const char *name)
 {
   HERE();
   clrk_list_elem_t *elem;
-  clrk_project_t *project;
+  clrk_project_t *project = NULL;
   char *buffer = NULL;
 
   if (name == NULL) {
