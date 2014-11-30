@@ -17,7 +17,7 @@ static int itoa(char *buf, unsigned int number)
 unsigned int clrk_draw_text(int x, int y, const char *text, int fg, int bg)
 {
   HERE();
-  unsigned w = 0, width = tb_width();
+  unsigned w = 0, width = clerk.width;
   struct tb_cell cells[width];
 
   while ((w+x) < width && *text != '\0') {
@@ -36,8 +36,10 @@ unsigned int clrk_draw_text(int x, int y, const char *text, int fg, int bg)
 int clrk_draw_line(int y, int bg)
 {
   HERE();
-  int i, width = tb_width();
+  int i, width = clerk.width;
   struct tb_cell cells[width];
+
+  LOG("w %d", width);
 
   for (i = 0; i < width; ++i) {
     cells[i].ch = ' ';
@@ -53,13 +55,13 @@ int clrk_draw_line(int y, int bg)
 void clrk_draw_project_line(void)
 {
   HERE();
-  char name[tb_width()];
+  char name[clerk.width];
   clrk_list_elem_t *project_elem;
   clrk_project_t *project;
   int i, x, length, width, space_per_project, spaces;
   int fg, bg;
 
-  width = tb_width();
+  width = clerk.width;
 
   /* Draw background line */
   bg = clerk.colors->project_bg != -1 ? clerk.colors->project_bg : CLRK_COLOR_PRJ_BG;
@@ -192,8 +194,8 @@ static void clrk_draw_todo_clear(void)
   unsigned width, height;
   unsigned i;
 
-  width = tb_width();
-  height = tb_height() - (CLRK_DRAW_PRJ_LINE_Y + 1);
+  width = clerk.width;
+  height = clerk.height - (CLRK_DRAW_PRJ_LINE_Y + 1);
 
   int bg = clerk.colors->bg != -1 ? clerk.colors->bg : CLRK_COLOR_BG;
 
@@ -204,6 +206,7 @@ static void clrk_draw_todo_clear(void)
     cells[i] = cell;
   }
 
+  LOG("w %d h %d", width, height);
   tb_blit(0, CLRK_DRAW_PRJ_LINE_Y + 1, width, height, cells);
   LOG("END");
 }
@@ -325,7 +328,7 @@ void clrk_draw_show_input_line(void)
 
 void clrk_draw_remove_input_line(void)
 {
-  unsigned height = tb_height();
+  unsigned height = clerk.height;
   int bg = clerk.colors->todo_bg != -1 ? clerk.colors->todo_bg : CLRK_COLOR_TODO_BG;
   /* Remove command line */
   clrk_draw_line(height - 1, bg);
@@ -336,7 +339,7 @@ void clrk_draw_remove_input_line(void)
 
 void clrk_draw_status(const char* status)
 {
-  unsigned height = tb_height();
+  unsigned height = clerk.height;
   const char *prompt = " clerk ";
   int fg, bg;
 
@@ -362,8 +365,8 @@ void clrk_draw_status(const char* status)
 void clrk_draw_help(void)
 {
   HERE();
-  unsigned height = tb_height();
-  unsigned width  = tb_width();
+  unsigned height = clerk.height;
+  unsigned width  = clerk.width;
   unsigned i = 0;
   int fg, bg;
 

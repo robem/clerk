@@ -80,7 +80,7 @@ add_char:
           if (buffer[buffer_idx] == '\0') {
             LOG("Append character");
             /* Append */
-            tb_change_cell(cx, tb_height() - 1, event.ch, CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
+            tb_change_cell(cx, clerk.height - 1, event.ch, CLRK_COLOR_INPUT_FG, CLRK_COLOR_INPUT_BG);
             buffer[buffer_idx] = space ? ' ' : event.ch;
           } else {
             /* Add character in between */
@@ -645,6 +645,8 @@ void clrk_init(const char *json, const char *config)
   clerk.colors->prompt_bg        = -1;
   clerk.colors->input_fg         = -1;
   clerk.colors->input_bg         = -1;
+  clerk.width                    = tb_width();
+  clerk.height                   = tb_height();
 
   if (!clrk_read_config()) {
     /* Show help screen */
@@ -840,7 +842,11 @@ void clrk_loop_normal(void)
               if (event.type == TB_EVENT_KEY) {
                 break;
               } else if (event.type == TB_EVENT_RESIZE) {
-                if (tb_width() > CLRK_MIN_WIDTH && tb_height() > CLRK_MIN_HEIGHT) {
+                LOG("resize 1 cw %d ch %d ew %d eh %d", clerk.width, clerk.height, event.w, event.h);
+                clerk.width = event.w;
+                clerk.height = event.h;
+                if (clerk.width > CLRK_MIN_WIDTH && clerk.height > CLRK_MIN_HEIGHT) {
+                  tb_clear();
                   clrk_draw();
                   clrk_draw_help();
                   tb_present();
@@ -871,7 +877,15 @@ void clrk_loop_normal(void)
           break;
       }
     } else if (event.type == TB_EVENT_RESIZE) {
-      if (tb_width() > CLRK_MIN_WIDTH && tb_height() > CLRK_MIN_HEIGHT) {
+      LOG("resize 2 cw %d ch %d ew %d eh %d", clerk.width, clerk.height, event.w, event.h);
+      clerk.width = event.w;
+      clerk.height = event.h;
+      if (clerk.width > CLRK_MIN_WIDTH && clerk.height > CLRK_MIN_HEIGHT) {
+         /*
+          * Somehow termbox needs to clear the intenal back buffer to hanlde resize correctly
+          * although tb_present was called in the last loop
+          */
+        tb_clear();
         clrk_draw();
       }
     }

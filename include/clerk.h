@@ -54,6 +54,8 @@ typedef struct clrk_clerk {
   clrk_list_elem_t *current;
   const char *config;
   color_configuration_t *colors;
+  unsigned width;
+  unsigned height;
 } clrk_clerk_t;
 
 /*
