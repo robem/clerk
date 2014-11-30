@@ -132,18 +132,9 @@ static clrk_project_t * clrk_project_new(const char *name)
   HERE();
   clrk_project_t *project = malloc(sizeof(clrk_project_t));
   assert(project);
-  const char *string, *default_name = "NONAME";
+  assert(name);
 
-  if (name && *name != '\0') {
-    string = name;
-  } else {
-    /* Set default name if name is empty string or nullptr */
-    string = default_name;
-  }
-
-  project->name = malloc(strlen(string) + 1);
-  strncpy(project->name, string, strlen(string) + 1);
-
+  project->name = strdup(name);
   project->current = NULL;
   project->todo_list = malloc(sizeof(clrk_list_t));
   assert(project->todo_list);
@@ -174,14 +165,16 @@ clrk_project_t * clrk_project_add(const char *name)
     strncpy(buffer, name, strlen(name) + 1);
   }
 
-  project = clrk_project_new(buffer);
+  if (buffer != NULL) {
+     project = clrk_project_new(buffer);
 
-  free(buffer);
+     free(buffer);
 
-  elem = clrk_list_add(clerk.project_list, project);
-  clerk.current = elem;
+     elem = clrk_list_add(clerk.project_list, project);
+     clerk.current = elem;
 
-  clrk_draw();
+     clrk_draw();
+  }
 
   LOG("END");
   return project;
