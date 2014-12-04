@@ -116,6 +116,12 @@ add_char:
         if (buffer_idx < buffer_size && buffer[buffer_idx] != '\0') {
           tb_set_cursor(++cx, cy);
         }
+      } else if (event.key == TB_KEY_HOME) {
+        cx = CLRK_DRAW_INPUT_START_X;
+        tb_set_cursor(cx, cy);
+      } else if (event.key == TB_KEY_END) {
+        cx = CLRK_DRAW_INPUT_START_X + buffer_size - 1;
+        tb_set_cursor(cx, cy);
       }
       LOG("key %d", event.key);
     } else if (event.type == TB_EVENT_RESIZE) {
