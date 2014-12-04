@@ -120,7 +120,7 @@ add_char:
         cx = CLRK_DRAW_INPUT_START_X;
         tb_set_cursor(cx, cy);
       } else if (event.key == TB_KEY_END) {
-        cx = CLRK_DRAW_INPUT_START_X + buffer_size - 1;
+        cx = CLRK_DRAW_INPUT_START_X + text_len;
         tb_set_cursor(cx, cy);
       }
       LOG("key %d", event.key);
