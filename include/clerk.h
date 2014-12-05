@@ -57,12 +57,14 @@ typedef struct clrk_clerk {
   color_configuration_t *colors;
   unsigned width;
   unsigned height;
+  clrk_exit_func exit_func;
+  volatile bool exit_func_invoked;
 } clrk_clerk_t;
 
 /*
  * Initialize Clerk with default values and draws user interface.
  */
-void clrk_init(const char *json, const char *config);
+void clrk_init(const char *json, const char *config, clrk_exit_func exit_func);
 
 /*
  * Create/add a new project
@@ -101,8 +103,10 @@ void clrk_todo_info(void);
 
 /*
  * Start Clerk.
- * If this function returns then Clerk will end.
+ * If this function returns then Clerk will end. The return value indicates
+ * whether the exit function supplied during initialization lead to the exit
+ * or not.
  */
-void clrk_loop_normal(void);
+bool clrk_loop_normal(void);
 
 #endif
