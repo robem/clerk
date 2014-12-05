@@ -12,6 +12,7 @@
 #include <clerk_list.h>
 #include <clerk_json.h>
 #include <clerk_log.h>
+#include <clerk_sig.h>
 
 #define CLRK_MIN_HEIGHT 10
 #define CLRK_MIN_WIDTH  20

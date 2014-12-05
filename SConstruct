@@ -19,6 +19,7 @@ env.Program('clerk',
             src/clerk_draw.c
             src/clerk_list.c
             src/clerk_json.c
+            src/clerk_sig.c
             '''.split(),
             LIBS = ['termbox', 'yajl_s'],
             parse_flags = "-Wall"
