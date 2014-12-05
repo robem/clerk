@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
-bool clrk_sig_init(void);
+typedef void (*clrk_exit_func)(void);
+
+bool clrk_sig_init(clrk_exit_func exit_func);
 
 #endif
