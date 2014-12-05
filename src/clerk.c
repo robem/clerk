@@ -2,6 +2,19 @@
 
 clrk_clerk_t clerk;
 
+static void clrk_set_status_and_await_key_press(const char *status)
+{
+  clrk_draw_status(status);
+  /* wait for ANY input key */
+  tb_present();
+  struct tb_event event;
+  while (tb_poll_event(&event)) {
+    if (event.type == TB_EVENT_KEY) {
+      break;
+    }
+  }
+}
+
 static char * clrk_input(char *text)
 {
   HERE();
@@ -650,15 +663,7 @@ void clrk_init(const char *json, const char *config)
   if (!clrk_read_config()) {
     /* Show help screen */
     clrk_draw_help();
-    clrk_draw_status("Couldn't load config");
-    /* wait for ANY input key */
-    tb_present();
-    struct tb_event event;
-    while (tb_poll_event(&event)) {
-      if (event.type == TB_EVENT_KEY) {
-        break;
-      }
-    }
+    clrk_set_status_and_await_key_press("Couldn't load config");
   }
 
   clrk_draw_init();
@@ -666,21 +671,17 @@ void clrk_init(const char *json, const char *config)
   if (!clrk_load()) {
     /* Show help screen */
     clrk_draw_help();
-    clrk_draw_status("Couldn't load todos");
-    /* wait for ANY input key */
-    tb_present();
-    struct tb_event event;
-    while (tb_poll_event(&event)) {
-      if (event.type == TB_EVENT_KEY) {
-        break;
-      }
-    }
+    clrk_set_status_and_await_key_press("Couldn't load todos");
   }
 
   if (clerk.project_list->first) {
     clerk.current = clerk.project_list->first;
     clrk_project_t *project = clrk_list_elem_data(clerk.current);
     project->current = project->todo_list->first;
+  }
+
+  if (!clrk_sig_init()) {
+    clrk_set_status_and_await_key_press("Couldn't install signal handler");
   }
 
   clrk_draw();
