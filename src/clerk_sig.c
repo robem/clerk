@@ -14,7 +14,6 @@
 typedef struct sigaction sigaction_t;
 
 static clrk_exit_func clrk_exit;
-
 static void clrk_save_handler(int sig, siginfo_t *siginfo, void *context)
 {
   HERE();
