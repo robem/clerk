@@ -3,6 +3,7 @@
 
 #if DEBUG
 #include <stdio.h>
+#include <time.h>
 
 #define   NOCOLOR   "\033[0m"
 #define   RED       "\033[31m"
@@ -13,7 +14,10 @@
 #define   CYAN      "\033[36m"
 
 #define LOG(...) do {\
+  time_t t = time(NULL); \
+  struct tm* tm = localtime(&t); \
   FILE *f = fopen("./LOG", "a"); \
+  fprintf(f, "%02d:%02d:%02d: ", tm->tm_hour, tm->tm_min, tm->tm_sec); \
   fprintf(f, "%s: ", __PRETTY_FUNCTION__); \
   fprintf(f, __VA_ARGS__); \
   fprintf(f, "\n"); \
