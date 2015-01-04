@@ -15,7 +15,11 @@ extern clrk_clerk_t clerk;
 static void clrk_json_write(void *ctx, const unsigned char *string, size_t len)
 {
   HERE();
-  fprintf((FILE*)ctx, "%s", string);
+  unsigned i = 0;
+  while (i < len) {
+    fprintf((FILE*)ctx, "%c", string[i]);
+    i++;
+  }
 }
 
 void clrk_save(void)
@@ -56,7 +60,7 @@ void clrk_save(void)
       /*
        * Each todo is represented as tuple
        * { CLRK_CONFIG_TEXT : <string>,
-       *   CLRK_CONFIG_X    : <bool> }
+       *   CLRK_CONFIG_X    : <int> }
        */
 
       yajl_gen_map_open(g);
