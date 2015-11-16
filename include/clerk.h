@@ -59,6 +59,7 @@ typedef struct clrk_clerk {
   unsigned height;
   clrk_exit_func exit_func;
   volatile bool exit_func_invoked;
+  bool todos_saved;
 } clrk_clerk_t;
 
 /*

@@ -672,6 +672,7 @@ void clrk_init(const char *json, const char *config, clrk_exit_func exit_func)
   clerk.height                   = tb_height();
   clerk.exit_func                = exit_func;
   clerk.exit_func_invoked        = false;
+  clerk.todos_saved              = false;
 
   if (!clrk_read_config()) {
     /* Show help screen */
@@ -765,11 +766,13 @@ bool clrk_loop_normal(void)
             /* Edit todo */
             LOG(RED"key 'e'"NOCOLOR);
             clrk_todo_edit_current();
+            clerk.todos_saved = false;
             break;
           case 'E':
             /* Edit project */
             LOG(RED"key 'E'"NOCOLOR);
             clrk_project_edit_current();
+            clerk.todos_saved = false;
             break;
           case 'g':
             /* Select first todo */
@@ -788,45 +791,60 @@ bool clrk_loop_normal(void)
             /* Move current project left */
             LOG(RED"key 'K'"NOCOLOR);
             clrk_project_move_left();
+            clerk.todos_saved = false;
             break;
           case 'i':
             /* Mark as todo as info */
             LOG(RED"key 'i'"NOCOLOR);
             clrk_todo_info();
+            clerk.todos_saved = false;
             break;
           case 'J':
             /* Move current todo down */
             LOG(RED"key 'J'"NOCOLOR);
             clrk_todo_move_down();
+            clerk.todos_saved = false;
             break;
           case 'K':
             /* Move current todo down */
             LOG(RED"key 'K'"NOCOLOR);
             clrk_todo_move_up();
+            clerk.todos_saved = false;
             break;
           case 'L':
             /* Move current project right */
             LOG(RED"key 'K'"NOCOLOR);
             clrk_project_move_right();
+            clerk.todos_saved = false;
             break;
           case 'p':
             /* Add new project */
             LOG(RED"key 'p'"NOCOLOR);
             clrk_project_add(NULL);
+            clerk.todos_saved = false;
             break;
           case 'P':
             /* Delete project */
             LOG(RED"key 'P'"NOCOLOR);
             clrk_project_remove_current();
             clrk_draw();
+            clerk.todos_saved = false;
             break;
           case 'Q':
             LOG(RED"key 'Q'"NOCOLOR);
+            /* Check if there are changes that need to be saved */
+            if (!clerk.todos_saved) {
+              /* If the user doesn't want to save he simply presses 'Q' again */
+              clerk.todos_saved = true;
+              clrk_draw_status("Unsaved changes!! Next 'Q' will quit.");
+              break;
+            }
             goto exit;
           case 'r':
             /* Mark current todo as 'running'/'next' */
             LOG(RED"key 'r'"NOCOLOR);
             clrk_todo_running();
+            clerk.todos_saved = false;
             break;
           case 'R':
             LOG(RED"key 'R'"NOCOLOR);
@@ -843,16 +861,19 @@ bool clrk_loop_normal(void)
             /* Write projects/todos to json file */
             clrk_save();
             clrk_draw_status("written to json");
+            clerk.todos_saved = true;
             break;
           case 't':
             /* Add new todo */
             LOG(RED"key 't'"NOCOLOR);
             clrk_todo_add(NULL);
+            clerk.todos_saved = false;
             break;
           case 'T':
             /* Add new todo */
             LOG(RED"key 'T'"NOCOLOR);
             clrk_todo_remove_current();
+            clerk.todos_saved = false;
             break;
           case '?':
             LOG(RED"key '?'"NOCOLOR);
