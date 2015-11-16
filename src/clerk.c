@@ -672,7 +672,7 @@ void clrk_init(const char *json, const char *config, clrk_exit_func exit_func)
   clerk.height                   = tb_height();
   clerk.exit_func                = exit_func;
   clerk.exit_func_invoked        = false;
-  clerk.todos_saved              = false;
+  clerk.todos_saved              = true;
 
   if (!clrk_read_config()) {
     /* Show help screen */
