@@ -2,6 +2,19 @@
 
 clrk_clerk_t clerk;
 
+static void clrk_set_status_and_await_key_press(const char *status)
+{
+  clrk_draw_status(status);
+  /* wait for ANY input key */
+  tb_present();
+  struct tb_event event;
+  while (tb_poll_event(&event)) {
+    if (event.type == TB_EVENT_KEY) {
+      break;
+    }
+  }
+}
+
 static char * clrk_input(char *text)
 {
   HERE();
@@ -616,7 +629,18 @@ void clrk_todo_running(void)
   LOG("END");
 }
 
-void clrk_init(const char *json, const char *config)
+/*
+ * Wrapper around the supplied exit function that sets a flag to indicate to
+ * the main loop to exit.
+ *
+ */
+void clrk_shutdown(void)
+{
+  clerk.exit_func_invoked = true;
+  clerk.exit_func();
+}
+
+void clrk_init(const char *json, const char *config, clrk_exit_func exit_func)
 {
   HERE();
   clerk.current               = NULL;
@@ -646,19 +670,13 @@ void clrk_init(const char *json, const char *config)
   clerk.colors->input_bg         = -1;
   clerk.width                    = tb_width();
   clerk.height                   = tb_height();
+  clerk.exit_func                = exit_func;
+  clerk.exit_func_invoked        = false;
 
   if (!clrk_read_config()) {
     /* Show help screen */
     clrk_draw_help();
-    clrk_draw_status("Couldn't load config");
-    /* wait for ANY input key */
-    tb_present();
-    struct tb_event event;
-    while (tb_poll_event(&event)) {
-      if (event.type == TB_EVENT_KEY) {
-        break;
-      }
-    }
+    clrk_set_status_and_await_key_press("Couldn't load config");
   }
 
   clrk_draw_init();
@@ -666,21 +684,17 @@ void clrk_init(const char *json, const char *config)
   if (!clrk_load()) {
     /* Show help screen */
     clrk_draw_help();
-    clrk_draw_status("Couldn't load todos");
-    /* wait for ANY input key */
-    tb_present();
-    struct tb_event event;
-    while (tb_poll_event(&event)) {
-      if (event.type == TB_EVENT_KEY) {
-        break;
-      }
-    }
+    clrk_set_status_and_await_key_press("Couldn't load todos");
   }
 
   if (clerk.project_list->first) {
     clerk.current = clerk.project_list->first;
     clrk_project_t *project = clrk_list_elem_data(clerk.current);
     project->current = project->todo_list->first;
+  }
+
+  if (!clrk_sig_init(&clrk_shutdown)) {
+    clrk_set_status_and_await_key_press("Couldn't install signal handler");
   }
 
   clrk_draw();
@@ -690,13 +704,22 @@ void clrk_init(const char *json, const char *config)
   LOG("END");
 }
 
-void clrk_loop_normal(void)
+bool clrk_loop_normal(void)
 {
   HERE();
   char last_char_key;
   struct tb_event event;
 
   while (tb_poll_event(&event)) {
+    /*
+     * When clerk is terminated by a signal, i.e., through invocation of the
+     * exit function, the 'exit_func_invoked' flag will be set in which case
+     * there is no need to try processing the event.
+     */
+    if (clerk.exit_func_invoked) {
+      break;
+    }
+
     if (event.type == TB_EVENT_KEY) {
       /* Go left */
       if (event.key == TB_KEY_ARROW_LEFT
@@ -799,7 +822,7 @@ void clrk_loop_normal(void)
             break;
           case 'Q':
             LOG(RED"key 'Q'"NOCOLOR);
-            return;
+            goto exit;
           case 'r':
             /* Mark current todo as 'running'/'next' */
             LOG(RED"key 'r'"NOCOLOR);
@@ -893,7 +916,10 @@ void clrk_loop_normal(void)
     }
     tb_present();
   }
+
+exit:
   /* Deinit */
   free(clerk.project_list);
   free(clerk.colors);
+  return clerk.exit_func_invoked;
 }

@@ -56,10 +56,14 @@ int main(int argc, char *const *argv)
 
   tb_select_output_mode(TB_OUTPUT_256);
 
-  clrk_init(todos, config);
+  clrk_init(todos, config, &tb_shutdown);
 
-  clrk_loop_normal();
-
-  tb_shutdown();
+  /*
+   * Depending on whether the loop exited by means of tb_shutdown (as supplied
+   * to clrk_init) we do not invoke here ourselves.
+   */
+  if (!clrk_loop_normal()) {
+    tb_shutdown();
+  }
   return EXIT_SUCCESS;
 }
